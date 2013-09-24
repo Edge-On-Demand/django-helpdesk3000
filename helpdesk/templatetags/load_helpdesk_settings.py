@@ -6,6 +6,8 @@ templatetags/load_helpdesk_settings.py - returns the settings as defined in
 """
 
 from django.template import Library
+from django.utils.safestring import mark_safe
+
 from helpdesk import settings as helpdesk_settings_config
 
 def load_helpdesk_settings(request):
@@ -19,3 +21,7 @@ def load_helpdesk_settings(request):
 
 register = Library()
 register.filter('load_helpdesk_settings', load_helpdesk_settings)
+
+@register.filter()
+def nbsp(value):
+    return mark_safe("&nbsp;".join(value.split(' ')))

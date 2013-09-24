@@ -380,7 +380,7 @@ class Ticket(models.Model):
         A HTML <span> providing a CSS_styled representation of the priority.
         """
         from django.utils.safestring import mark_safe
-        return mark_safe(u"<span class='priority%s'>%s</span>" % (self.priority, self.priority))
+        return mark_safe(u"<span class='dk-label dk-label-priority%s'>%s</span>" % (self.priority, self.priority))
     get_priority_span = property(_get_priority_span)
 
     def _get_status(self):
@@ -692,6 +692,7 @@ class PreSetReply(models.Model):
 
     class Meta:
         ordering = ['name',]
+        verbose_name_plural = 'pre set replies'
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -813,6 +814,8 @@ class KBCategory(models.Model):
 
     class Meta:
         ordering = ['title',]
+        verbose_name = 'Knowledgebase category'
+        verbose_name_plural = 'Knowledgebase categories'
 
     def get_absolute_url(self):
         return ('helpdesk_kb_category', (), {'slug': self.slug})
@@ -878,6 +881,8 @@ class KBItem(models.Model):
 
     class Meta:
         ordering = ['title',]
+        verbose_name = 'Knowledgebase item'
+        verbose_name_plural = 'Knowledgebase items'
 
     def get_absolute_url(self):
         return ('helpdesk_kb_item', (self.id,))

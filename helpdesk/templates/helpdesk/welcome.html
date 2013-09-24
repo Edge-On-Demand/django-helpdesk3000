@@ -1,0 +1,10 @@
+{% load i18n %}
+{% load url from future %}
+{% load staticfiles %}
+
+{% if not ticket %}
+    <div class="dk-roof">
+        <h2 class="primary">{% trans "Welcome to the  Help Desk" %}</a></h2>
+        <h4>{% block welcome_subtext %}{% trans "Search for your ticket below." %}{% endblock %}</h4>
+    </div>
+{% endif %}

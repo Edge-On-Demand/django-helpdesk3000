@@ -102,7 +102,10 @@
             </div>
 
             <div id='body'>
-                {% block helpdesk_body %}{% endblock %}
+                {% block helpdesk_body %}
+	                {% block helpdesk_inner %}
+	                {% endblock helpdesk_inner %}
+                {% endblock %}
             </div>
 
             <div id='footer'>

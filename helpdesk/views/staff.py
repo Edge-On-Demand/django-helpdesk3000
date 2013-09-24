@@ -861,6 +861,7 @@ def ticket_list(request):
     return render_to_response('helpdesk/ticket_list.html',
         RequestContext(request, dict(
             context,
+            q=q or '',
             query_string=querydict.urlencode(),
             tickets=tickets,
             user_choices=User.objects.filter(is_active=True,is_staff=True),
