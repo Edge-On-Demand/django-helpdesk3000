@@ -201,11 +201,11 @@ $(document).ready(function() {
         
         <p>
             <label>{% trans "Select:" %}</label>
-            <a href='#select_all' id='select_all'>{% trans "All" %}</a>
-            <a href='#select_none' id='select_none'>{% trans "None" %}</a>
-            <a href='#select_inverse' id='select_inverse'>{% trans "Inverse" %}</a>
+            &nbsp;<a href='#select_all' id='select_all'>{% trans "All" %}</a>
+            &nbsp;<a href='#select_none' id='select_none'>{% trans "None" %}</a>
+            &nbsp;<a href='#select_inverse' id='select_inverse'>{% trans "Inverse" %}</a>
             &nbsp;
-            <label for='id_mass_action'>{% trans "Action:" %}</label>
+            <label for='id_mass_action'>{% trans "Action:" %}</label>&nbsp;
             <select name='action' id='id_mass_action'>
                 <option value=''>--- Select ---</option>
                 <option value='take'>{% trans "Take (Assign to me)" %}</option>
@@ -220,7 +220,7 @@ $(document).ready(function() {
                         <option value='assign_{{ u.id }}'>{{ u.username }}</option>
                     {% endfor %}
                 </optgroup>
-            </select>
+            </select>&nbsp;
             <input type='submit' value='Go' />
         </p>
         {% csrf_token %}
