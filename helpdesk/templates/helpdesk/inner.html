@@ -4,31 +4,24 @@
 {% load url from future %}
 
 {% block helpdesk_inner %}
-
-<div class="dk-inner">
-    
-    {% include "helpdesk/welcome.html" %}
-    
-    <div class="dk-search">
-        <form action="{% url 'helpdesk_list' %}" method="get">
-            <input class="question-search" value="{{ q|force_escape }}" placeholder="{% trans 'Enter keywords or ticket number here.' %}" type="text" name="q" />
-            <input name="search_type" value="header" type="hidden" />
-            <input value="Search" type="submit" class="submit-question-search" />
-        </form>
+    <div class="dk-inner">
+        {% include "helpdesk/welcome.html" %}
+        <div class="dk-search">
+            <form action="{% url 'helpdesk_list' %}" method="get">
+                <input class="question-search" value="{{ q|force_escape }}" placeholder="{% trans 'Enter keywords or ticket number here.' %}" type="text" name="q" />
+                <input name="search_type" value="header" type="hidden" />
+                <input value="Search" type="submit" class="submit-question-search" />
+            </form>
+            <div class="clear"></div>
+        </div>
+        <div class="dk-content">
+            {% block helpdesk_widgets %}{% endblock helpdesk_widgets %}
+        </div>
+        <div class="dk-sidebar">
+            <div class="inner">
+                {% include "helpdesk/sidebar.html" %}
+            </div>
+        </div>
         <div class="clear"></div>
     </div>
-    
-    <div class="dk-content">
-        {% block helpdesk_widgets %}{% endblock helpdesk_widgets %}
-    </div>
-    
-    <div class="dk-sidebar">
-        <div class="inner">
-            {% include "helpdesk/sidebar.html" %}
-        </div>
-    </div>
-    
-    <div class="clear"></div>
-</div>
-
 {% endblock helpdesk_inner %}
