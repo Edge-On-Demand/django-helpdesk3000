@@ -62,32 +62,41 @@ def homepage(request):
         form.fields['queue'].choices = [('', '--------')] + [[q.id, q.title] for q in Queue.objects.filter(allow_public_submission=True)]
 
     knowledgebase_categories = KBCategory.objects.all()
+    
+    public_queues = Queue.objects.filter(allow_public_submission=True)
+    show_submit_form = public_queues.count() and helpdesk_settings.HELPDESK_SUBMIT_A_TICKET_PUBLIC
 
     return render_to_response('helpdesk/public_homepage.html',
-        RequestContext(request, {
-            'form': form,
-            'helpdesk_settings': helpdesk_settings,
-            'kb_categories': knowledgebase_categories
-        }))
+        RequestContext(request, dict(
+            form=form,
+            helpdesk_settings=helpdesk_settings,
+            kb_categories=knowledgebase_categories,
+            show_submit_form=show_submit_form,
+        )))
 
 
 def view_ticket(request):
     ticket_req = request.GET.get('ticket', '')
     ticket = False
-    email = request.GET.get('email', '')
+    email = request.GET.get('email', None)
     error_message = ''
 
-    if ticket_req and email:
+    if ticket_req and email is not None:
         parts = ticket_req.split('-')
         queue = '-'.join(parts[0:-1])
         ticket_id = parts[-1]
 
         try:
-            ticket = Ticket.objects.get(id=ticket_id, queue__slug__iexact=queue, submitter_email__iexact=email)
+            ticket = Ticket.objects.get(
+                id=ticket_id,
+                queue__slug__iexact=queue,
+                submitter_email__iexact=email)
         except:
             ticket = False
             error_message = _('Invalid ticket ID or e-mail address. Please try again.')
 
+        print '!'*80
+        print 'ticket',ticket
         if ticket:
 
             if request.user.is_staff:
@@ -114,8 +123,10 @@ def view_ticket(request):
 
             # redirect user back to this ticket if possible.
             redirect_url = ''
-            if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED:
+            if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED or 1:
                 redirect_url = reverse('helpdesk_view', args=[ticket_id])
+            print '!'*80
+            print 'redirect_url:',redirect_url
 
             return render_to_response('helpdesk/public_view_ticket.html',
                 RequestContext(request, {

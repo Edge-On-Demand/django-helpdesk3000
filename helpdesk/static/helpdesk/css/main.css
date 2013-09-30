@@ -1,6 +1,8 @@
 .dk-inner {
   padding: 20px 0;
   font-family: "Helvetica Neue", Arial, Helvetica, sans-serif; }
+  .dk-inner .error {
+    color: red; }
   .dk-inner input {
     margin: 0; }
   .dk-inner thead th {
