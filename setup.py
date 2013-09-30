@@ -133,6 +133,7 @@ setup(
     package_data=find_package_data("helpdesk", only_in_packages=False),
     include_package_data=True,
     zip_safe=False,
-    install_requires=['setuptools', 'pytz'],
+    #install_requires=['setuptools', 'pytz'],
+    install_requires=["Django>=1.4.0"],
 )
 
