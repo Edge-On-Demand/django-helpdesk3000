@@ -40,18 +40,19 @@ from helpdesk import settings as helpdesk_settings
 if HAS_TAG_SUPPORT:
     from tagging.models import Tag, TaggedItem
 
+def user_in_queue_group(u):
+    return u.groups.filter(helpdesk_queues__allow_group_users=True).count()
+
 if helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE:
     # treat 'normal' users like 'staff'
     staff_member_required = user_passes_test(lambda u: u.is_authenticated() and u.is_active)
 else:
-    try:
-        from django.contrib.admin.views.decorators import staff_member_required
-    except:
-        staff_member_required = user_passes_test(lambda u: u.is_authenticated() and u.is_active and u.is_staff)
-
+#    try:
+#        from django.contrib.admin.views.decorators import staff_member_required
+#    except:
+    staff_member_required = user_passes_test(lambda u: u.is_authenticated() and u.is_active and (u.is_staff or user_in_queue_group(u)))
 
 superuser_required = user_passes_test(lambda u: u.is_authenticated() and u.is_active and u.is_superuser)
-
 
 def dashboard(request):
     """
@@ -59,6 +60,13 @@ def dashboard(request):
     showing ticket counts by queue/status, and a list of unassigned tickets
     with options for them to 'Take' ownership of said tickets.
     """
+    
+    user = request.user
+    queues = None
+    queue_ids = []
+    if user_in_queue_group(user):
+        queues = Queue.objects.filter(allow_group_users=True, group__user=user)
+        queue_ids = queues.values_list('id', flat=True)
 
     # open & reopened tickets, assigned to current user
     tickets = Ticket.objects.filter(
@@ -66,17 +74,23 @@ def dashboard(request):
         ).exclude(
             status__in = [Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
         )
+    if queue_ids:
+        tickets = tickets.filter(queue__id__in=queue_ids)
 
     # closed & resolved tickets, assigned to current user
     tickets_closed_resolved =  Ticket.objects.filter(
             assigned_to=request.user, 
             status__in = [Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS])
+    if queue_ids:
+        tickets_closed_resolved = tickets_closed_resolved.filter(queue__id__in=queue_ids)
 
     unassigned_tickets = Ticket.objects.filter(
             assigned_to__isnull=True,
         ).exclude(
             status=Ticket.CLOSED_STATUS,
         )
+    if queue_ids:
+        unassigned_tickets = unassigned_tickets.filter(queue__id__in=queue_ids)
 
     # all tickets, reported by current user
     all_tickets_reported_by_current_user = ''
@@ -85,6 +99,8 @@ def dashboard(request):
         all_tickets_reported_by_current_user = Ticket.objects.filter(
             submitter_email=email_current_user,
         ).order_by('status')
+        if queue_ids:
+            all_tickets_reported_by_current_user = all_tickets_reported_by_current_user.filter(queue__id__in=queue_ids)
 
     # calculate basic ticket stats if requested
     basic_ticket_stats = False
@@ -107,10 +123,10 @@ def dashboard(request):
                         COUNT(CASE t.status WHEN '4' THEN t.id END) AS closed
                 FROM    helpdesk_ticket t,
                         helpdesk_queue q
-                WHERE   q.id = t.queue_id
+                WHERE   q.id = t.queue_id {queues}
                 GROUP BY queue, name
                 ORDER BY q.id;
-        """)
+        """.format(queues=('AND q.id IN (%s)' % (','.join(map(str, queue_ids)),) if queue_ids else '')))
     else:
         cursor.execute("""
             SELECT      q.id as queue,
@@ -120,11 +136,11 @@ def dashboard(request):
                         COUNT(CASE t.status WHEN '4' THEN t.id END) AS closed
                 FROM    helpdesk_queue q
                 LEFT OUTER JOIN helpdesk_ticket t
-                ON      q.id = t.queue_id            
+                ON      q.id = t.queue_id
+                WHERE   1=1 {queues}
                 GROUP BY queue, name
                 ORDER BY q.id;
-        """)    
-    
+        """.format(queues=('AND q.id IN (%s)' % (','.join(map(str, queue_ids)),) if queue_ids else '')))
     
     dash_tickets = query_to_dict(cursor.fetchall(), cursor.description)
 

@@ -95,8 +95,6 @@ def view_ticket(request):
             ticket = False
             error_message = _('Invalid ticket ID or e-mail address. Please try again.')
 
-        print '!'*80
-        print 'ticket',ticket
         if ticket:
 
             if request.user.is_staff:
@@ -125,8 +123,6 @@ def view_ticket(request):
             redirect_url = ''
             if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED or 1:
                 redirect_url = reverse('helpdesk_view', args=[ticket_id])
-            print '!'*80
-            print 'redirect_url:',redirect_url
 
             return render_to_response('helpdesk/public_view_ticket.html',
                 RequestContext(request, {

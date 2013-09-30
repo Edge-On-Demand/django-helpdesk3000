@@ -6,11 +6,15 @@ from helpdesk.models import CustomField
 
 class QueueAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'email_address', 'locale')
+    
+    raw_id_fields = (
+        'group',
+    )
 
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'assigned_to', 'submitter_email',)
+    list_display = ('id', 'queue', 'title', 'status', 'assigned_to', 'submitter_email',)
     date_hierarchy = 'created'
-    list_filter = ('assigned_to', 'status', )
+    list_filter = ('assigned_to', 'status', 'queue',)
     raw_id_fields = ('assigned_to',)
 
 class TicketChangeInline(admin.StackedInline):

@@ -5,3 +5,4 @@ docs/html/*
 docs/doctrees/*
 .project
 .pydevproject
+/.settings

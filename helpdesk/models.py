@@ -183,6 +183,20 @@ class Queue(models.Model):
         # This is updated by management/commands/get_mail.py.
         )
 
+    allow_group_users = models.BooleanField(
+        default=False,
+        help_text=_('''If checked, and the group is set, all users belonging
+            to the group will effectively have staff permissions for viewing
+            and editing this queue.'''))
+
+    group = models.ForeignKey(
+        'auth.Group',
+        related_name='helpdesk_queues',
+        blank=True,
+        null=True,
+        help_text=_('''If specified, non-staff users added to this group will
+            be able to view and edit this queue.'''))
+
     def __unicode__(self):
         return u"%s" % self.title
 
