@@ -17,7 +17,12 @@
         <hr />
         <table width='100%'>
             <thead>
-               <tr class='row_columnheads'><th>{% trans "Queue" %}</th><th class="center">{% trans "Open" %}</th><th class="center">{% trans "Resolved" %}</th><th class="center">{% trans "Closed" %}</th></tr>
+                <tr class='row_columnheads'>
+                    <th>{% trans "Queue" %}</th>
+                    <th class="center queue-count">{% trans "Open" %}</th>
+                    <th class="center queue-count">{% trans "Resolved" %}</th>
+                    <th class="center queue-count">{% trans "Closed" %}</th>
+                </tr>
             </thead>
             <tbody>
                 {% for queue in dash_tickets %}
@@ -45,7 +50,7 @@
                         <tr>
                             <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
                             <td>{{ ticket.get_priority_span }}</td>
-                            <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
+                            <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td>{{ ticket.get_status }}</td>
                             <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince }}</span></td>
@@ -69,7 +74,7 @@
                         <tr>
                             <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
                             <td>{{ ticket.get_priority_span }}</td>
-                            <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
+                            <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td>{{ ticket.get_status }}</td>
                             <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince }}</span></td>
@@ -93,7 +98,7 @@
                         <tr>
                             <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
                             <td>{{ ticket.get_priority_span }}</td>
-                            <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
+                            <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td><span title='{{ ticket.created|date:"r" }}'>{{ ticket.created|timesince }} ago</span></td>
                             <td><a href='{{ ticket.get_absolute_url }}?take'><span class='button button_take'>{% trans "Take" %}</span></a>
@@ -119,7 +124,7 @@
                         <tr>
                             <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
                             <td>{{ ticket.get_priority_span }}</td>
-                            <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
+                            <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td>{{ ticket.get_status }}</td>
                             <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince }}</span></td>

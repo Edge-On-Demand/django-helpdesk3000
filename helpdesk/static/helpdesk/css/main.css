@@ -3,6 +3,10 @@
   font-family: "Helvetica Neue", Arial, Helvetica, sans-serif; }
   .dk-inner .error {
     color: red; }
+  .dk-inner .queue-count {
+    width: 20%; }
+  .dk-inner .title-value {
+    width: 30%; }
   .dk-inner input {
     margin: 0; }
   .dk-inner thead th {
