@@ -699,6 +699,7 @@ def mass_update(request):
 mass_update = staff_member_required(mass_update)
 
 def ticket_list(request):
+    q = None
     context = {}
 
     # Query_params will hold a dictionary of parameters relating to
