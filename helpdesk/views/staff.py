@@ -40,6 +40,14 @@ from helpdesk import settings as helpdesk_settings
 if HAS_TAG_SUPPORT:
     from tagging.models import Tag, TaggedItem
 
+def get_allowed_queues(request):
+    user = request.user
+    queue_ids = []
+    if user_in_queue_group(user):
+        queues = Queue.objects.filter(allow_group_users=True, group__user=user)
+        queue_ids = queues.values_list('id', flat=True)
+    return queue_ids
+
 def user_in_queue_group(u):
     return u.groups.filter(helpdesk_queues__allow_group_users=True).count()
 
@@ -62,11 +70,7 @@ def dashboard(request):
     """
     
     user = request.user
-    queues = None
-    queue_ids = []
-    if user_in_queue_group(user):
-        queues = Queue.objects.filter(allow_group_users=True, group__user=user)
-        queue_ids = queues.values_list('id', flat=True)
+    queue_ids = get_allowed_queues(request)
 
     # open & reopened tickets, assigned to current user
     tickets = Ticket.objects.filter(
@@ -230,7 +234,8 @@ followup_delete = staff_member_required(followup_delete)
 
 
 def view_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    queue_ids = get_allowed_queues(request)
+    ticket = get_object_or_404(Ticket, id=ticket_id, queue__id__in=queue_ids)
 
     if request.GET.has_key('take'):
         # Allow the user to assign the ticket to themselves whilst viewing it.
@@ -704,10 +709,12 @@ def ticket_list(request):
         'sortreverse': False,
         'keyword': None,
         'other_filter': None,
-        }
+    }
 
     from_saved_query = False
 
+    queue_ids = get_allowed_queues(request)
+        
     # If the user is coming from the header/navigation search box, lets' first
     # look at their query to see if they have entered a valid ticket number. If
     # they have, just redirect to that ticket number. Otherwise, we treat it as
@@ -743,24 +750,26 @@ def ticket_list(request):
                 pass
 
     saved_query = None
-    if request.GET.get('saved_query', None):
-        from_saved_query = True
-        try:
-            saved_query = SavedSearch.objects.get(pk=request.GET.get('saved_query'))
-        except SavedSearch.DoesNotExist:
-            return HttpResponseRedirect(reverse('helpdesk_list'))
-        if not (saved_query.shared or saved_query.user == request.user):
-            return HttpResponseRedirect(reverse('helpdesk_list'))
-
-        import cPickle
-        from helpdesk.lib import b64decode
-        query_params = cPickle.loads(b64decode(str(saved_query.query)))
-    elif not (  request.GET.has_key('queue')
+    #Do not do this. Horribly insecure. We should almost never unpickle random strings from the Internet...
+#    if request.GET.get('saved_query', None):
+#        
+#        from_saved_query = True
+#        try:
+#            saved_query = SavedSearch.objects.get(pk=request.GET.get('saved_query'))
+#        except SavedSearch.DoesNotExist:
+#            return HttpResponseRedirect(reverse('helpdesk_list'))
+#        if not (saved_query.shared or saved_query.user == request.user):
+#            return HttpResponseRedirect(reverse('helpdesk_list'))
+#
+#        import cPickle
+#        from helpdesk.lib import b64decode
+#        query_params = cPickle.loads(b64decode(str(saved_query.query)))
+    if not (  request.GET.has_key('queue')
             or  request.GET.has_key('assigned_to')
             or  request.GET.has_key('status')
             or  request.GET.has_key('q')
             or  request.GET.has_key('sort')
-            or  request.GET.has_key('sortreverse') 
+            or  request.GET.has_key('sortreverse')
             or  request.GET.has_key('tags') ):
 
         # Fall-back if no querying is being done, force the list to only
@@ -836,6 +845,9 @@ def ticket_list(request):
             'sorting': 'created',
         }
         ticket_qs = apply_query(Ticket.objects.select_related(), query_params)
+
+    # Restrict tickets by queues the user is allowed to see.
+    ticket_qs = ticket_qs.filter(queue__id__in=queue_ids)
 
     ## TAG MATCHING
     if HAS_TAG_SUPPORT:
