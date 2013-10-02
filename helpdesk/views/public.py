@@ -12,6 +12,7 @@ from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, Context, RequestContext
 from django.utils.translation import ugettext as _
+from django.conf import settings
 
 from helpdesk import settings as helpdesk_settings
 from helpdesk.forms import PublicTicketForm
@@ -21,6 +22,8 @@ from helpdesk.models import Ticket, Queue, UserSettings, KBCategory
 
 def homepage(request):
     if not request.user.is_authenticated() and helpdesk_settings.HELPDESK_REDIRECT_TO_LOGIN_BY_DEFAULT:
+        if hasattr(settings, 'LOGIN_URL') and settings.LOGIN_URL:
+            return HttpResponseRedirect(settings.LOGIN_URL)
         return HttpResponseRedirect(reverse('login'))
 
     if (request.user.is_staff or (request.user.is_authenticated() and helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE)):
