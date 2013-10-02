@@ -43,7 +43,10 @@ if HAS_TAG_SUPPORT:
 def get_allowed_queues(request):
     user = request.user
     queue_ids = []
-    if user_in_queue_group(user):
+    if user.is_staff:
+        queues = Queue.objects.all()
+        queue_ids = queues.values_list('id', flat=True)
+    elif user_in_queue_group(user):
         queues = Queue.objects.filter(allow_group_users=True, group__user=user)
         queue_ids = queues.values_list('id', flat=True)
     return queue_ids
