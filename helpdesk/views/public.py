@@ -23,8 +23,8 @@ from helpdesk.models import Ticket, Queue, UserSettings, KBCategory
 def homepage(request):
     if not request.user.is_authenticated() and helpdesk_settings.HELPDESK_REDIRECT_TO_LOGIN_BY_DEFAULT:
         if hasattr(settings, 'LOGIN_URL') and settings.LOGIN_URL:
-            return HttpResponseRedirect(settings.LOGIN_URL)
-        return HttpResponseRedirect(reverse('login'))
+            return HttpResponseRedirect(settings.LOGIN_URL+'?next='+request.path)
+        return HttpResponseRedirect(reverse('login')+'?next='+request.path)
 
     if (request.user.is_staff or (request.user.is_authenticated() and helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE)):
         try:
