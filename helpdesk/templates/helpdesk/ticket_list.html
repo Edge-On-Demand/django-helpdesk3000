@@ -7,32 +7,30 @@
 {% block helpdesk_title %}{% trans "Ticket Listing" %}{% endblock %}
 
 {% block extra-head %}{{ block.super }}
-<script type='text/javascript' language='javascript' src='{{ STATIC_URL }}helpdesk/filter.js'></script>
 <script type='text/javascript' language='javascript'>
 (function($){
-    //$(document).ready(function(){
-    $(document).bind('afterready', function(){
-    	console.log('configured tabs')
+    $(document).ready(function(){
         
         // Enable Tabs
         $("#searchtabs").tabs({
             collapsible:true,
-            selected:-1, // default all tabs collapsed
-            show:function(event, ui){
-            	console.log('showing tab')
-            }
+            //show:function(event, ui){},
+            selected:-1 // default all tabs collapsed
         });
+        
         // Hide all tabs by default
         $("#searchtabs > ul > li").removeClass().addClass("ui-corner-top ui-state-default");
-    
+        
         $("#select_all").click(function(){
             $(".ticket_multi_select").attr('checked', true);
             return false;
         });
+        
         $("#select_none").click(function(){
             $(".ticket_multi_select").attr('checked', false);
             return false;
         });
+        
         $("#select_inverse").click(function(){
             $(".ticket_multi_select").each(function() {
                 $(this).attr('checked', !$(this).attr('checked'));
