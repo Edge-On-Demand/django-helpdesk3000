@@ -1,8 +1,10 @@
 from django.contrib import admin
-from helpdesk.models import Queue, Ticket, FollowUp, PreSetReply, KBCategory
-from helpdesk.models import EscalationExclusion, EmailTemplate, KBItem
-from helpdesk.models import TicketChange, Attachment, IgnoreEmail
-from helpdesk.models import CustomField
+from helpdesk.models import (
+    Queue, Ticket, FollowUp, PreSetReply, KBCategory,
+    EscalationExclusion, EmailTemplate, KBItem,
+    TicketChange, Attachment, IgnoreEmail,
+    CustomField, UserSettings
+)
 
 class QueueAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'email_address', 'locale')
@@ -37,6 +39,18 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     list_display = ('template_name', 'heading', 'locale')
     list_filter = ('locale', )
 
+class UserSettingsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user',)
+    
+    search_fields = (
+        'user__username',
+        'user__email',
+    )
+    
+    raw_id_fields = (
+        'user',
+    )
+
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Queue, QueueAdmin)
 admin.site.register(FollowUp, FollowUpAdmin)
@@ -47,3 +61,4 @@ admin.site.register(KBCategory)
 admin.site.register(KBItem, KBItemAdmin)
 admin.site.register(IgnoreEmail)
 admin.site.register(CustomField, CustomFieldAdmin)
+admin.site.register(UserSettings, UserSettingsAdmin)

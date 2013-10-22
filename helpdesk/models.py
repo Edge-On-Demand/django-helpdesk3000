@@ -985,6 +985,7 @@ class UserSettings(models.Model):
         verbose_name = 'User Settings'
         verbose_name_plural = 'User Settings'
 
+from django.http import HttpRequest
 
 def create_usersettings(sender, created_models=[], instance=None, created=False, **kwargs):
     """
@@ -996,7 +997,10 @@ def create_usersettings(sender, created_models=[], instance=None, created=False,
     'DoesNotExist: UserSettings matching query does not exist.' errors.
     """
     from helpdesk.settings import DEFAULT_USER_SETTINGS
-    if sender == User and created:
+    if isinstance(sender, HttpRequest) and sender.user.is_authenticated():
+        s, created = UserSettings.objects.get_or_create(user=sender.user, defaults={'settings': DEFAULT_USER_SETTINGS})
+        s.save()
+    elif sender == User and created:
         # This is a new user, so lets create their settings entry.
         s, created = UserSettings.objects.get_or_create(user=instance, defaults={'settings': DEFAULT_USER_SETTINGS})
         s.save()

@@ -31,9 +31,16 @@ try:
 except ImportError:
     from datetime import datetime as timezone
 
-from helpdesk.forms import TicketForm, UserSettingsForm, EmailIgnoreForm, EditTicketForm, TicketCCForm, EditFollowUpForm, TicketDependencyForm
+from helpdesk.forms import (
+    TicketForm, UserSettingsForm, EmailIgnoreForm, EditTicketForm,
+    TicketCCForm, EditFollowUpForm, TicketDependencyForm
+)
 from helpdesk.lib import send_templated_mail, query_to_dict, apply_query, safe_template_context
-from helpdesk.models import Ticket, Queue, FollowUp, TicketChange, PreSetReply, Attachment, SavedSearch, IgnoreEmail, TicketCC, TicketDependency
+from helpdesk.models import (
+    Ticket, Queue, FollowUp, TicketChange, PreSetReply, Attachment,
+    SavedSearch, IgnoreEmail, TicketCC, TicketDependency,
+    create_usersettings,
+)
 from helpdesk.settings import HAS_TAG_SUPPORT
 from helpdesk import settings as helpdesk_settings
   
@@ -704,6 +711,9 @@ mass_update = staff_member_required(mass_update)
 def ticket_list(request):
     q = None
     context = {}
+
+    # Auto-create user settings are created for user, if not done so already.
+    create_usersettings(request)
 
     # Query_params will hold a dictionary of parameters relating to
     # a query, to be saved if needed:
