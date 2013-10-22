@@ -959,7 +959,7 @@ class UserSettings(models.Model):
         help_text=_('This is a base64-encoded representation of a pickled Python dictionary. Do not change this field via the admin.'),
         blank=True,
         null=True,
-        )
+    )
 
     def _set_settings(self, data):
         # data should always be a Python dictionary.

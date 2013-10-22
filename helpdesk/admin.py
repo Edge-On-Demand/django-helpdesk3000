@@ -47,9 +47,27 @@ class UserSettingsAdmin(admin.ModelAdmin):
         'user__email',
     )
     
+    exclude = (
+        'settings_pickled',
+    )
+    
     raw_id_fields = (
         'user',
     )
+    
+    readonly_fields = (
+        'settings_pickled_str',
+    )
+    
+    def settings_pickled_str(self, obj=None):
+        if not obj:
+            return ''
+        settings = obj.settings
+        return '<table>'+''.join(
+            '<tr><th>%s</th><td>%s</td></tr>' % (k, settings[k])
+            for k in sorted(settings.iterkeys())
+        )+'</table>'
+    settings_pickled_str.allow_tags = True
 
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Queue, QueueAdmin)

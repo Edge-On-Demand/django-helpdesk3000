@@ -939,6 +939,10 @@ def edit_ticket(request, ticket_id):
 edit_ticket = staff_member_required(edit_ticket)
 
 def create_ticket(request):
+    
+    # Auto-create user settings are created for user, if not done so already.
+    create_usersettings(request)
+    
     if helpdesk_settings.HELPDESK_STAFF_ONLY_TICKET_OWNERS:
         assignable_users = User.objects.filter(is_active=True, is_staff=True).order_by('username')
     else:
