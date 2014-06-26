@@ -8,3 +8,4 @@ docs/doctrees/*
 /.settings
 =*
 .env*
+*.egg-info
