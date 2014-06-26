@@ -6,3 +6,5 @@ docs/doctrees/*
 .project
 .pydevproject
 /.settings
+=*
+.env*

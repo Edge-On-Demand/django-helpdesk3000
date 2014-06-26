@@ -18,6 +18,9 @@ except ImportError:
     from datetime import datetime as timezone
 
 from helpdesk.settings import HAS_TAG_SUPPORT
+from helpdesk.lib import (
+    send_templated_mail, query_to_dict, apply_query, safe_template_context,
+)
 
 if HAS_TAG_SUPPORT:
     from tagging.fields import TagField
@@ -259,7 +262,7 @@ class Ticket(models.Model):
         (REOPENED_STATUS, _('Reopened')),
         (RESOLVED_STATUS, _('Resolved')),
         (CLOSED_STATUS, _('Closed')),
-        (DUPLICATE_STATUS, _('Duplicate')),        
+        (DUPLICATE_STATUS, _('Duplicate')),
     )
 
     PRIORITY_CHOICES = (
@@ -468,7 +471,7 @@ class Ticket(models.Model):
         return ('helpdesk_view', (self.id,))
     get_absolute_url = models.permalink(get_absolute_url)
 
-    def save(self, *args, **kwargs):
+    def save(self, followup=None, files=None, *args, **kwargs):
         if not self.id:
             # This is a new ticket as no ID yet exists.
             self.created = timezone.now()
@@ -478,7 +481,130 @@ class Ticket(models.Model):
 
         self.modified = timezone.now()
 
+        old = None
+        changed = False
+        if self.id:
+            old = Ticket.objects.get(id=self.id)
+        reassigned = old and old.assigned_to != self.assigned_to
+
         super(Ticket, self).save(*args, **kwargs)
+        
+        if old:
+            changed = bool([
+                1
+                for f in self._meta.fields
+                if getattr(old, f.name) != getattr(self, f.name)
+            ])
+        else:
+            changed = True
+        
+        # Select email template based on the type of change.
+        if reassigned:
+            template_staff = 'assigned_owner'
+        elif self.status == Ticket.RESOLVED_STATUS:
+            template_staff = 'resolved_owner'
+        elif self.status == Ticket.CLOSED_STATUS:
+            template_staff = 'closed_owner'
+        else:
+            template_staff = 'updated_owner'
+
+        messages_sent_to = []
+
+        context = safe_template_context(self)
+        context.update(
+            resolution=self.resolution,
+            comment=followup.comment if followup else None,
+        )
+
+        # Send status changes to the submitter.
+        if followup and followup.public \
+        and (
+            followup.comment or \
+            (self.status in (Ticket.RESOLVED_STATUS, Ticket.CLOSED_STATUS))):
+            
+            if self.status == Ticket.RESOLVED_STATUS:
+                template = 'resolved_'
+            elif self.status == Ticket.CLOSED_STATUS:
+                template = 'closed_'
+            else:
+                template = 'updated_'
+    
+            template_suffix = 'submitter'
+    
+            if self.submitter_email:
+                send_templated_mail(
+                    template + template_suffix,
+                    context,
+                    recipients=self.submitter_email,
+                    sender=self.queue.from_address,
+                    fail_silently=True,
+                    files=files,
+                    )
+                messages_sent_to.append(self.submitter_email)
+#                print('messages_sent_to:',messages_sent_to)
+    
+            template_suffix = 'cc'
+    
+            for cc in self.ticketcc_set.all():
+                if cc.email_address not in messages_sent_to:
+                    send_templated_mail(
+                        template + template_suffix,
+                        context,
+                        recipients=cc.email_address,
+                        sender=self.queue.from_address,
+                        fail_silently=True,
+                        )
+                    messages_sent_to.append(cc.email_address)
+#                    print('messages_sent_to:',messages_sent_to)
+    
+        # Send status updates to CC users.
+        if followup and self.queue.updated_ticket_cc and self.queue.updated_ticket_cc not in messages_sent_to:
+            if reassigned:
+                template_cc = 'assigned_cc'
+            elif self.status == Ticket.RESOLVED_STATUS:
+                template_cc = 'resolved_cc'
+            elif self.status == Ticket.CLOSED_STATUS:
+                template_cc = 'closed_cc'
+            else:
+                template_cc = 'updated_cc'
+            send_templated_mail(
+                template_cc,
+                context,
+                recipients=self.queue.updated_ticket_cc,
+                sender=self.queue.from_address,
+                fail_silently=True,
+                files=files,
+            )
+            messages_sent_to.append(self.queue.updated_ticket_cc)
+#            print('messages_sent_to:',messages_sent_to)
+
+        # Send reassignment email to the new assigned user.
+        email_on_ticket_assign = self.assigned_to \
+            and self.assigned_to.usersettings.settings.get(
+                'email_on_ticket_assign', False)
+        email_on_ticket_change = self.assigned_to \
+            and self.assigned_to.usersettings.settings.get(
+                'email_on_ticket_change', False)
+        send_change_email = \
+                self.assigned_to \
+            and self.assigned_to.email \
+            and self.assigned_to.email not in messages_sent_to \
+            and self.assigned_to.is_staff \
+            and self.assigned_to.is_active \
+            and (
+                (reassigned and email_on_ticket_assign) or
+                (changed and email_on_ticket_change)
+            )
+#        print('send_change_email:',send_change_email)
+        if send_change_email:
+            send_templated_mail(
+                template_staff,
+                context,
+                recipients=self.assigned_to.email,
+                sender=self.queue.from_address,
+                fail_silently=True,
+                files=files,
+            )
 
 
 class FollowUpManager(models.Manager):
@@ -982,8 +1108,8 @@ class UserSettings(models.Model):
         return u'Preferences for %s' % self.user
 
     class Meta:
-        verbose_name = 'User Settings'
-        verbose_name_plural = 'User Settings'
+        verbose_name = _('User Settings')
+        verbose_name_plural = _('User Settings')
 
 from django.http import HttpRequest
 
@@ -1219,7 +1345,8 @@ class CustomField(models.Model):
         
     empty_selection_list = models.BooleanField(
         _('Add empty first choice to List?'),
-        help_text=_('Only for List: adds an empty first entry to the choices list, which enforces that the user makes an active choice.'),
+        help_text=_('Only for List: adds an empty first entry to the choices '\
+            'list, which enforces that the user makes an active choice.'),
         )        
 
     list_values = models.TextField(
@@ -1231,7 +1358,8 @@ class CustomField(models.Model):
     
     ordering = models.IntegerField(
         _('Ordering'),
-        help_text=_('Lower numbers are displayed first; higher numbers are listed later'),
+        help_text=_('Lower numbers are displayed first; '\
+            'higher numbers are listed later'),
         blank=True,
         null=True,
         )
@@ -1239,7 +1367,10 @@ class CustomField(models.Model):
     def _choices_as_array(self):
         from StringIO import StringIO
         valuebuffer = StringIO(self.list_values)
-        choices = [[item.strip(), item.strip()] for item in valuebuffer.readlines()]
+        choices = [
+            [item.strip(), item.strip()]
+            for item in valuebuffer.readlines()
+        ]
         valuebuffer.close()
         return choices
     choices_as_array = property(_choices_as_array)
@@ -1251,7 +1382,8 @@ class CustomField(models.Model):
 
     staff_only = models.BooleanField(
         _('Staff Only?'),
-        help_text=_('If this is ticked, then the public submission form will NOT show this field'),
+        help_text=_('If this is ticked, then the public submission form '\
+            'will NOT show this field'),
         )
 
     objects = CustomFieldManager()
@@ -1282,9 +1414,10 @@ class TicketCustomFieldValue(models.Model):
 
 class TicketDependency(models.Model):
     """
-    The ticket identified by `ticket` cannot be resolved until the ticket in `depends_on` has been resolved.
-    To help enforce this, a helper function `can_be_resolved` on each Ticket instance checks that 
-    these have all been resolved.
+    The ticket identified by `ticket` cannot be resolved until the ticket
+    in `depends_on` has been resolved.
+    To help enforce this, a helper function `can_be_resolved` on each Ticket
+    instance checks that these have all been resolved.
     """
     ticket = models.ForeignKey(
         Ticket,

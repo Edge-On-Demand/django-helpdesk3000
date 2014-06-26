@@ -76,7 +76,7 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
             t = EmailTemplate.objects.get(template_name__iexact=template_name, locale__isnull=True)
         except EmailTemplate.DoesNotExist:
             logger.warning('template "%s" does not exist, no mail sent' %
-			   template_name)
+               template_name)
             return # just ignore if template doesn't exist
 
     if not sender:
@@ -94,7 +94,7 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
     ''' keep new lines in html emails '''
     from django.utils.safestring import mark_safe
 
-    if context.has_key('comment'):
+    if context.has_key('comment') and context['comment']:
         html_txt = context['comment']
         html_txt = html_txt.replace('\r\n', '<br>')
         context['comment'] = mark_safe(html_txt)

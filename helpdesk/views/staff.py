@@ -24,6 +24,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, Context, RequestContext
 from django.utils.translation import ugettext as _
 from django.utils.html import escape
+from django.utils import timezone
 from django import forms
 
 try:
@@ -166,6 +167,7 @@ def dashboard(request):
             'all_tickets_reported_by_current_user': all_tickets_reported_by_current_user,
             'dash_tickets': dash_tickets,
             'basic_ticket_stats': basic_ticket_stats,
+            'current_dt': timezone.now(),
         }))
 dashboard = staff_member_required(dashboard)
 
@@ -509,96 +511,7 @@ def update_ticket(request, ticket_id, public=False):
         if new_status == Ticket.RESOLVED_STATUS or ticket.resolution is None:
             ticket.resolution = comment
 
-    messages_sent_to = []
-
-    # ticket might have changed above, so we re-instantiate context with the 
-    # (possibly) updated ticket.
-    context = safe_template_context(ticket)
-    context.update(
-        resolution=ticket.resolution,
-        comment=f.comment,
-        )
-
-    if public and (f.comment or (f.new_status in (Ticket.RESOLVED_STATUS, Ticket.CLOSED_STATUS))):
-        
-
-        if f.new_status == Ticket.RESOLVED_STATUS:
-            template = 'resolved_'
-        elif f.new_status == Ticket.CLOSED_STATUS:
-            template = 'closed_'
-        else:
-            template = 'updated_'
-
-        template_suffix = 'submitter'
-
-        if ticket.submitter_email:
-            send_templated_mail(
-                template + template_suffix,
-                context,
-                recipients=ticket.submitter_email,
-                sender=ticket.queue.from_address,
-                fail_silently=True,
-                files=files,
-                )
-            messages_sent_to.append(ticket.submitter_email)
-
-        template_suffix = 'cc'
-
-        for cc in ticket.ticketcc_set.all():
-            if cc.email_address not in messages_sent_to:
-                send_templated_mail(
-                    template + template_suffix,
-                    context,
-                    recipients=cc.email_address,
-                    sender=ticket.queue.from_address,
-                    fail_silently=True,
-                    )
-                messages_sent_to.append(cc.email_address)
-
-    if ticket.assigned_to and request.user != ticket.assigned_to and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
-        # We only send e-mails to staff members if the ticket is updated by
-        # another user. The actual template varies, depending on what has been
-        # changed.
-        if reassigned:
-            template_staff = 'assigned_owner'
-        elif f.new_status == Ticket.RESOLVED_STATUS:
-            template_staff = 'resolved_owner'
-        elif f.new_status == Ticket.CLOSED_STATUS:
-            template_staff = 'closed_owner'
-        else:
-            template_staff = 'updated_owner'
-
-        if (not reassigned or ( reassigned and ticket.assigned_to.usersettings.settings.get('email_on_ticket_assign', False))) or (not reassigned and ticket.assigned_to.usersettings.settings.get('email_on_ticket_change', False)):
-            send_templated_mail(
-                template_staff,
-                context,
-                recipients=ticket.assigned_to.email,
-                sender=ticket.queue.from_address,
-                fail_silently=True,
-                files=files,
-                )
-            messages_sent_to.append(ticket.assigned_to.email)
-
-    if ticket.queue.updated_ticket_cc and ticket.queue.updated_ticket_cc not in messages_sent_to:
-        if reassigned:
-            template_cc = 'assigned_cc'
-        elif f.new_status == Ticket.RESOLVED_STATUS:
-            template_cc = 'resolved_cc'
-        elif f.new_status == Ticket.CLOSED_STATUS:
-            template_cc = 'closed_cc'
-        else:
-            template_cc = 'updated_cc'
-
-        send_templated_mail(
-            template_cc,
-            context,
-            recipients=ticket.queue.updated_ticket_cc,
-            sender=ticket.queue.from_address,
-            fail_silently=True,
-            files=files,
-            )
-
-    ticket.save()
+    ticket.save(followup=f, files=files)
 
     # auto subscribe user if enabled
     if helpdesk_settings.HELPDESK_AUTO_SUBSCRIBE_ON_TICKET_RESPONSE and request.user.is_authenticated():

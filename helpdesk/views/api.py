@@ -17,8 +17,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import loader, Context
-from django.utils import simplejson
+#from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
+
+import json
 
 try:
     from django.utils import timezone

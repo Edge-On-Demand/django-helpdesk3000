@@ -10,15 +10,16 @@ urls.py - Mapping of URL's to our various views. Note we always used NAMED
 from django.conf import settings
 import django
 if django.get_version().startswith("1.3"):
-	from django.conf.urls.defaults import *
+    from django.conf.urls.defaults import *
 else:
-	from django.conf.urls import *
+    from django.conf.urls import *
 from django.contrib.auth.decorators import login_required
+
+from django.views.generic import TemplateView
 
 from helpdesk import settings as helpdesk_settings
 from helpdesk.views import feeds
 
-from django.views.generic import TemplateView
 class DirectTemplateView(TemplateView):
     extra_context = None
     def get_context_data(self, **kwargs):
@@ -52,11 +53,13 @@ urlpatterns = patterns('helpdesk.views.staff',
         'view_ticket',
         name='helpdesk_view'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_edit/(?P<followup_id>[0-9]+)/$',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_edit'\
+        '/(?P<followup_id>[0-9]+)/$',
         'followup_edit',
         name='helpdesk_followup_edit'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_delete/(?P<followup_id>[0-9]+)/$',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_delete'\
+        '/(?P<followup_id>[0-9]+)/$',
         'followup_delete',
         name='helpdesk_followup_delete'),
 
@@ -96,11 +99,13 @@ urlpatterns = patterns('helpdesk.views.staff',
         'ticket_dependency_add',
         name='helpdesk_ticket_dependency_add'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/dependency/delete/(?P<dependency_id>[0-9]+)/$',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/dependency/delete'\
+        '/(?P<dependency_id>[0-9]+)/$',
         'ticket_dependency_del',
         name='helpdesk_ticket_dependency_del'),
         
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/attachment_delete/(?P<attachment_id>[0-9]+)/$',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/attachment_delete'\
+        '/(?P<attachment_id>[0-9]+)/$',
         'attachment_del',
         name='helpdesk_attachment_del'),
 
@@ -164,7 +169,8 @@ urlpatterns += patterns('',
         login_required(feeds.OpenTicketsByUser()),
         name='helpdesk_rss_user'),
     
-    url(r'^rss/user/(?P<user_name>[\.A-Za-z0-9_\-\@]+)/(?P<queue_slug>[A-Za-z0-9_-]+)/$',
+    url(r'^rss/user/(?P<user_name>[\.A-Za-z0-9_\-\@]+)'\
+        '/(?P<queue_slug>[A-Za-z0-9_-]+)/$',
         login_required(feeds.OpenTicketsByUser()),
         name='helpdesk_rss_user_queue'),
     
@@ -195,7 +201,10 @@ urlpatterns += patterns('',
 
     url(r'^logout/$',
         'django.contrib.auth.views.logout',
-        {'template_name': 'helpdesk/registration/login.html', 'next_page': '../'},
+        {
+            'template_name': 'helpdesk/registration/login.html',
+            'next_page': '../'
+        },
         name='logout'),
 )
 
@@ -215,13 +224,19 @@ if helpdesk_settings.HELPDESK_KB_ENABLED:
     )
 
 urlpatterns += patterns('',
-    url(r'^api/$',TemplateView.as_view(template_name='helpdesk/help_api.html'),
+    url(r'^api/$',
+        TemplateView.as_view(template_name='helpdesk/help_api.html'),
         name='helpdesk_api_help'),
 
-    url(r'^help/context/$',TemplateView.as_view(template_name='helpdesk/help_context.html'),
+    url(r'^help/context/$',
+        TemplateView.as_view(template_name='helpdesk/help_context.html'),
         name='helpdesk_help_context'),
 
-		url(r'^system_settings/$',DirectTemplateView.as_view(template_name='helpdesk/system_settings.html',
-				extra_context={'ADMIN_URL': getattr(settings, 'ADMIN_URL', '/admin/')}),
-				name='helpdesk_system_settings'),
+        url(r'^system_settings/$',
+            DirectTemplateView.as_view(
+                template_name='helpdesk/system_settings.html',
+                extra_context={
+                    'ADMIN_URL': getattr(settings, 'ADMIN_URL', '/admin/')
+                }),
+            name='helpdesk_system_settings'),
 )

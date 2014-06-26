@@ -1,6 +1,7 @@
 {% extends "helpdesk/inner.html" %}
 {% load i18n %}
 {% load url from future %}
+{% load helpdesktags %}
 
 {% block welcome_subtext %}
     {% if helpdesk_settings.HELPDESK_CUSTOM_WELCOME %}
@@ -67,7 +68,15 @@
             <hr />
             <table width='100%'>
                 <thead>
-                    <tr class='row_columnheads'><th>Ticket #</th><th>{% trans "Priority" %}</th><th>{% trans "Title" %}</th><th>{% trans "Queue" %}</th><th>{% trans "Status" %}</th><th>{% trans "Last Update" %}</th></tr>
+                    <tr class='row_columnheads'>
+                        <th>Ticket&nbsp;#</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Queue" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Last Update" %}</th>
+                        <th>{% trans "Due" %}</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for ticket in user_tickets %}
@@ -78,6 +87,15 @@
                             <td>{{ ticket.queue }}</td>
                             <td>{{ ticket.get_status }}</td>
                             <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince }}</span></td>
+                            <td style="white-space:nowrap;">
+                                {% if ticket.due_date %}
+                                    {% if ticket.due_date > current_dt %}
+                                        <span style="" title='{{ ticket.due_date|date:"r" }}'>in {{ ticket.due_date|timeuntil }}</span>
+                                    {% else %}
+                                        <span style="color:red;" title='{{ ticket.due_date|date:"r" }}'>{{ ticket.due_date|timesince }} ago</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -91,7 +109,15 @@
             <hr />
             <table width='100%'>
                 <thead>
-                    <tr class='row_columnheads'><th>Ticket #</th><th>{% trans "Priority" %}</th><th>{% trans "Title" %}</th><th>{% trans "Queue" %}</th><th>{% trans "Created" %}</th><th>&nbsp;</th></tr>
+                    <tr class='row_columnheads'>
+                        <th>Ticket #</th>
+                        <th>{% trans "Priority" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Queue" %}</th>
+                        <th>{% trans "Created" %}</th>
+                        <th>{% trans "Due" %}</th>
+                        <th>&nbsp;</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for ticket in unassigned_tickets %}
@@ -101,6 +127,15 @@
                             <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td><span title='{{ ticket.created|date:"r" }}'>{{ ticket.created|timesince }} ago</span></td>
+                            <td style="white-space:nowrap;">
+                                {% if ticket.due_date %}
+                                    {% if ticket.due_date > current_dt %}
+                                        <span style="" title='{{ ticket.due_date|date:"r" }}'>in {{ ticket.due_date|timeuntil }}</span>
+                                    {% else %}
+                                        <span style="color:red;" title='{{ ticket.due_date|date:"r" }}'>{{ ticket.due_date|timesince }} ago</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                             <td><a href='{{ ticket.get_absolute_url }}?take'><span class='button button_take'>{% trans "Take" %}</span></a>
                             {% if helpdesk_settings.HELPDESK_DASHBOARD_SHOW_DELETE_UNASSIGNED %}
                                | <a href='{% url 'helpdesk_delete' ticket.id %}'><span class='button button_delete'>{% trans "Delete" %}</span></a>{% endif %}</td>

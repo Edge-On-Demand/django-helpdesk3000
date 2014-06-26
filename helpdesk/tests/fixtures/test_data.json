@@ -1,0 +1,38 @@
+[
+    {
+        "pk": 1, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "jondoe", 
+            "first_name": "Jon", 
+            "last_name": "Doe", 
+            "is_active": true, 
+            "is_superuser": true, 
+            "is_staff": true, 
+            "last_login": "2013-05-09T21:19:50Z", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "sha1$45efa$f6fe7a5bd45d3d4b5dc48d59596a1908d6c76d5d", 
+            "email": "jon.doe@localhost.com", 
+            "date_joined": "2013-05-09T21:19:50Z"
+        }
+    },
+    {
+        "pk": 2, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "janedoe", 
+            "first_name": "Jane", 
+            "last_name": "Doe", 
+            "is_active": true, 
+            "is_superuser": true, 
+            "is_staff": true, 
+            "last_login": "2013-05-09T21:19:50Z", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "sha1$45efa$f6fe7a5bd45d3d4b5dc48d59596a1908d6c76d5d", 
+            "email": "jane.doe@localhost.com", 
+            "date_joined": "2013-05-09T21:19:50Z"
+        }
+    }
+]
