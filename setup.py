@@ -4,7 +4,7 @@ from distutils.util import convert_path
 from fnmatch import fnmatchcase
 from setuptools import setup, find_packages
 
-version = '0.1.13'
+import helpdesk
 
 # Provided as an attribute, so you can append to these instead
 # of replicating them:
@@ -108,8 +108,8 @@ internal (or, perhaps, external) helpdesk management.
 """
 
 setup(
-    name='django-helpdesk',
-    version=version,
+    name='django-helpdesk3000',
+    version=helpdesk.__version__,
     description="Django-powered ticket tracker for your helpdesk",
     long_description=LONG_DESCRIPTION,
     classifiers=[
@@ -125,9 +125,9 @@ setup(
         "Topic :: Software Development :: Bug Tracking",
     ],
     keywords=['django', 'helpdesk', 'tickets', 'incidents', 'cases'],
-    author='Ross Poulton',
-    author_email='ross@rossp.org',
-    url='http://github.com/rossp/django-helpdesk',
+    author='Chris Spencer',
+    author_email='chrisspen@gmail.com',
+    url='https://github.com/chrisspen/django-helpdesk3000',
     license='BSD',
     packages=find_packages(),
     package_data=find_package_data("helpdesk", only_in_packages=False),

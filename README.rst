@@ -1,23 +1,8 @@
-django-helpdesk - A Django powered ticket tracker for small enterprise.
+django-helpdesk3000 - A Django powered ticket tracker.
 =======================================================================
 
-Copyright 2009-11 Jutda and Ross Poulton. All Rights Reserved. See LICENSE for details.
-
-django-helpdesk was formerly known as Jutda Helpdesk, named after the 
-company who originally created it. As of January 2011 the name has been 
-changed to reflect what it really is: a Django-powered ticket tracker with
-contributors reaching far beyond Jutda.
-
-Complete documentation is available in the docs/ directory, or online at http://django-helpdesk.readthedocs.org/.
-
-You can see a demo installation at http://django-helpdesk-demo.herokuapp.com/
-
-Licensing
----------
-
-See the file 'LICENSE' for licensing terms. Note that django-helpdesk is 
-distributed with 3rd party products which have their own licenses. See 
-LICENSE.3RDPARTY for license terms for included packages.
+A fork of django-helpdesk https://github.com/rossp/django-helpdesk
+with better styling, more features, and numerous bug fixes.
 
 Dependencies (pre-flight checklist)
 -----------------------------------
