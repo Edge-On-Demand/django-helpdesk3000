@@ -15,6 +15,15 @@
   .title-value{
     width:30%;
   }
+  
+  .row_columnheads th a {
+    color: black;
+    text-decoration: none;
+  }
+  .row_columnheads th a:hover {
+    color: black;
+    text-decoration: none;
+  }
 
   // common resets
   input {margin:0;}

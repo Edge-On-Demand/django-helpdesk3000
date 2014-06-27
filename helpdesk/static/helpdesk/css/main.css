@@ -7,6 +7,12 @@
     width: 20%; }
   .dk-inner .title-value {
     width: 30%; }
+  .dk-inner .row_columnheads th a {
+    color: black;
+    text-decoration: none; }
+  .dk-inner .row_columnheads th a:hover {
+    color: black;
+    text-decoration: none; }
   .dk-inner input {
     margin: 0; }
   .dk-inner thead th {

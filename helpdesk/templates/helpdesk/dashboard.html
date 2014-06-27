@@ -69,13 +69,13 @@
             <table width='100%'>
                 <thead>
                     <tr class='row_columnheads'>
-                        <th>Ticket&nbsp;#</th>
-                        <th>{% trans "Priority" %}</th>
-                        <th>{% trans "Title" %}</th>
-                        <th>{% trans "Queue" %}</th>
-                        <th>{% trans "Status" %}</th>
-                        <th>{% trans "Last Update" %}</th>
-                        <th>{% trans "Due" %}</th>
+                        <th>{% sortable_column_link request "id" 'o1' "Ticket&nbsp;#" 'priority' %}</th>
+                        <th>{% sortable_column_link request "priority" 'o1' "Priority" 'priority' %}</th>
+                        <th>{% sortable_column_link request "title" 'o1' "Title" 'priority' %}</th>
+                        <th>{% sortable_column_link request "queue" 'o1' "Queue" 'priority' %}</th>
+                        <th>{% sortable_column_link request "status" 'o1' "Status" 'priority' %}</th>
+                        <th>{% sortable_column_link request "modified" 'o1' "Last Update" 'priority' %}</th>
+                        <th>{% sortable_column_link request "due_on" 'o1' "Due" 'priority' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,7 +86,7 @@
                             <td class="title-value"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>
                             <td>{{ ticket.queue }}</td>
                             <td>{{ ticket.get_status }}</td>
-                            <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince }}</span></td>
+                            <td><span title='{{ ticket.modified|date:"r" }}'>{{ ticket.modified|timesince|nbsp }}</span></td>
                             <td style="white-space:nowrap;">
                                 {% if ticket.due_date %}
                                     {% if ticket.due_date > current_dt %}
@@ -110,12 +110,12 @@
             <table width='100%'>
                 <thead>
                     <tr class='row_columnheads'>
-                        <th>Ticket #</th>
-                        <th>{% trans "Priority" %}</th>
-                        <th>{% trans "Title" %}</th>
-                        <th>{% trans "Queue" %}</th>
-                        <th>{% trans "Created" %}</th>
-                        <th>{% trans "Due" %}</th>
+                        <th>{% sortable_column_link request 'id' 'o2' 'Ticket&nbsp;#' 'priority' %}</th>
+                        <th>{% sortable_column_link request 'priority' 'o2' "Priority" 'priority' %}</th>
+                        <th>{% sortable_column_link request 'title' 'o2' "Title" 'priority' %}</th>
+                        <th>{% sortable_column_link request 'queue' 'o2' "Queue" 'priority' %}</th>
+                        <th>{% sortable_column_link request 'created' 'o2' "Created" 'priority' %}</th>
+                        <th>{% sortable_column_link request 'due_on' 'o2' "Due" 'priority' %}</th>
                         <th>&nbsp;</th>
                     </tr>
                 </thead>

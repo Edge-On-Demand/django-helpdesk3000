@@ -80,6 +80,17 @@ def dashboard(request):
     with options for them to 'Take' ownership of said tickets.
     """
     
+    o1 = [
+        _.strip()
+        for _ in request.GET.get('o1', 'priority').split(',')
+        if _.strip()
+    ]
+    o2 = [
+        _.strip()
+        for _ in request.GET.get('o2', 'priority').split(',')
+        if _.strip()
+    ]
+    
     user = request.user
     queue_ids = get_allowed_queues(request)
 
@@ -91,6 +102,8 @@ def dashboard(request):
         )
     if queue_ids:
         tickets = tickets.filter(queue__id__in=queue_ids)
+    if o1:
+        tickets = tickets.order_by(*o1)
 
     # closed & resolved tickets, assigned to current user
     tickets_closed_resolved =  Ticket.objects.filter(
@@ -106,6 +119,8 @@ def dashboard(request):
         )
     if queue_ids:
         unassigned_tickets = unassigned_tickets.filter(queue__id__in=queue_ids)
+    if o2:
+        unassigned_tickets = unassigned_tickets.order_by(*o2)
 
     # all tickets, reported by current user
     all_tickets_reported_by_current_user = ''
@@ -168,6 +183,8 @@ def dashboard(request):
             'dash_tickets': dash_tickets,
             'basic_ticket_stats': basic_ticket_stats,
             'current_dt': timezone.now(),
+            'o1': o1,
+            'o2': o2,
         }))
 dashboard = staff_member_required(dashboard)
 
