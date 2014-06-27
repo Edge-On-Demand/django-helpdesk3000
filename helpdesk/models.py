@@ -471,7 +471,9 @@ class Ticket(models.Model):
         return ('helpdesk_view', (self.id,))
     get_absolute_url = models.permalink(get_absolute_url)
 
-    def save(self, followup=None, files=None, *args, **kwargs):
+    def save(self, followup=None, files=None, send_email=False, *args, **kwargs):
+#        print('!'*80)
+#        print('Ticket.save')
         if not self.id:
             # This is a new ticket as no ID yet exists.
             self.created = timezone.now()
@@ -517,7 +519,7 @@ class Ticket(models.Model):
         )
 
         # Send status changes to the submitter.
-        if followup and followup.public \
+        if send_email and followup and followup.public \
         and (
             followup.comment or \
             (self.status in (Ticket.RESOLVED_STATUS, Ticket.CLOSED_STATUS))):
@@ -558,7 +560,8 @@ class Ticket(models.Model):
 #                    print('messages_sent_to:',messages_sent_to)
     
         # Send status updates to CC users.
-        if followup and self.queue.updated_ticket_cc and self.queue.updated_ticket_cc not in messages_sent_to:
+        if send_email and followup and self.queue.updated_ticket_cc \
+        and self.queue.updated_ticket_cc not in messages_sent_to:
             if reassigned:
                 template_cc = 'assigned_cc'
             elif self.status == Ticket.RESOLVED_STATUS:
@@ -586,7 +589,8 @@ class Ticket(models.Model):
             and self.assigned_to.usersettings.settings.get(
                 'email_on_ticket_change', False)
         send_change_email = \
-                self.assigned_to \
+                send_email \
+            and self.assigned_to \
             and self.assigned_to.email \
             and self.assigned_to.email not in messages_sent_to \
             and self.assigned_to.is_staff \

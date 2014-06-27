@@ -112,6 +112,7 @@ class EditFollowUpForm(forms.ModelForm):
         exclude = ('date', 'user',)
 
 class TicketForm(forms.Form):
+    
     queue = forms.ChoiceField(
         label=_('Queue'),
         required=True,
@@ -263,7 +264,8 @@ class TicketForm(forms.Form):
                 t.assigned_to = u
             except User.DoesNotExist:
                 t.assigned_to = None
-        t.save()
+        
+        t.save(send_email=False)
         
         for field, value in self.cleaned_data.items():
             if field.startswith('custom_'):
@@ -309,6 +311,8 @@ class TicketForm(forms.Form):
 
         context = safe_template_context(t)
         context['comment'] = f.comment
+        
+        #TODO:relocate all email-sending logic to Ticket.save()
         
         messages_sent_to = []
 

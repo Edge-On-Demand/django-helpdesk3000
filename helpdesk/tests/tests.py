@@ -93,7 +93,7 @@ class TicketBasicsTestCase(TestCase):
         # Assign ticket.
         mail.outbox = []
         t.assigned_to = users[0]
-        t.save()
+        t.save(send_email=True)
         
         # Confirm a reassignment notice email was sent.
         self.assertEqual(len(mail.outbox), 1)
@@ -155,6 +155,76 @@ class TicketBasicsTestCase(TestCase):
             'http://testserver%s' % reverse('helpdesk_public_view'))
         # Ensure only two e-mails were sent - submitter & updated.
         self.assertEqual(email_count+2, len(mail.outbox))
+        
+    def test_helpdesk_submit(self):
+        """
+        Confirm a user can submit a ticket on the ticket submission page.
+        """
+        
+        queue_simple = Queue.objects.create(
+            title='Queue Simple',
+            slug='queue-simple',
+            allow_public_submission=True)
+            
+        users = User.objects.all()
+        self.assertEqual(users.count(), 2)
+        submitter = User.objects.get(username='jondoe')
+        submitter.set_password('password')
+        submitter.save()
+        
+        assigned_user = User.objects.get(username='janedoe')
+
+        # We're not logged in yet, so we should be redirected.
+        response = self.client.get(reverse('helpdesk_submit'))
+        self.assertEqual(response.status_code, 302)
+        
+        # Login.
+        #TODO:why doesn't this work?
+#        response = self.client.post(
+#            '/admin/login/',
+#            {'username': 'jondoe', 'password': 'password'})
+#        self.assertEqual(response.status_code, 200)
+#        print(response)
+#        self.assertTrue('Please log in again' not in str(response))
+        self.client.login(username=submitter.username, password='password')
+        
+        # Now we should be able to load the submission page.
+        response = self.client.get(reverse('helpdesk_submit'))
+        self.assertEqual(response.status_code, 200)
+        
+#        # Submit a ticket.
+        post_data = dict(
+            queue=queue_simple.id,
+            title='Test ticket title',
+            submitter_email=submitter.email,
+            body='Test ticket body',
+            priority=3,
+            assigned_to=assigned_user.id,
+        )
+        response = self.client.post(
+            reverse('helpdesk_submit'), post_data, follow=True)
+            
+        # Ensure we landed on the ticket's page.
+        last_redirect = response.redirect_chain[-1]
+        last_redirect_url = last_redirect[0]
+        last_redirect_status = last_redirect[1]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            last_redirect_url.split('?')[0],
+            'http://testserver%s' % reverse('helpdesk_view', args=(1,)))
+#            
+#        # Ensure submitter, new-queue + update-queue were all emailed.
+        for email in mail.outbox:
+#            #print(dir(email), email.__dict__.keys())
+            print(email.subject, email.to)
+        self.assertEqual(len(mail.outbox), 2)
+#        
+#        email_templates = EmailTemplate.objects.filter(locale='en')
+#        self.assertEqual(email_templates.count(), 16)
+#        
+#        # Lookup ticket.
+#        t = Ticket.objects.all().order_by('-id')[0]
+        
 
 class PublicActionsTestCase(TestCase):
     """
