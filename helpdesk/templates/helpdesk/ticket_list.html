@@ -2,7 +2,7 @@
 
 {% load i18n %}
 {% load url from future %}
-{% load in_list %}
+{% load in_list helpdesktags %}
 
 {% block helpdesk_title %}{% trans "Ticket Listing" %}{% endblock %}
 
@@ -233,14 +233,14 @@
         <table width='100%'>
             <thead>
                 <tr class='row_columnheads'>
-                    <th>#</th>
+                    <th>{% sortable_column_link request 'id' 'sort' '#' default_sorting %}</th>
                     <th>&nbsp;</th>
-                    <th>{% trans "Pr" %}</th>
-                    <th>{% trans "Title" %}</th>
-                    <th>{% trans "Queue" %}</th>
-                    <th>{% trans "Status" %}</th>
-                    <th>{% trans "Created" %}</th>
-                    <th>{% trans "Owner" %}</th>
+                    <th>{% sortable_column_link request 'priority' 'sort' "Priority" default_sorting %}</th>
+                    <th>{% sortable_column_link request 'title' 'sort' "Title" default_sorting %}</th>
+                    <th>{% sortable_column_link request 'queue' 'sort' "Queue" default_sorting %}</th>
+                    <th>{% sortable_column_link request 'status' 'sort' "Status" default_sorting %}</th>
+                    <th>{% sortable_column_link request 'created' 'sort' "Created" default_sorting %}</th>
+                    <th>{% sortable_column_link request 'assigned_to' 'sort' "Owner" default_sorting %}</th>
                     {% if tags_enabled %}<th>{% trans "Tags" %}</th>{% endif %}
                 </tr>
             </thead>
@@ -248,7 +248,7 @@
                 {% if tickets %}
                     {% for ticket in tickets.object_list %}
                         <tr>
-                            <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
+                            <td style="white-space:nowrap;"><a href='{{ ticket.get_absolute_url }}'>{{ ticket.ticket }}</a></td>
                             <td><input type='checkbox' name='ticket_id' value='{{ ticket.id }}' class='ticket_multi_select' /></td>
                             <td>{{ ticket.get_priority_span }}</td>
                             <td><a href='{{ ticket.get_absolute_url }}'>{{ ticket.title }}</a></td>

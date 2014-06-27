@@ -174,6 +174,7 @@ def apply_query(queryset, params):
         queryset = queryset.filter(params['other_filter'])
 
     sorting = params.get('sorting', None)
+#    print('sorting2:',sorting)
     if sorting:
         sortreverse = params.get('sortreverse', None)
         if sortreverse:

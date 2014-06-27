@@ -641,6 +641,9 @@ mass_update = staff_member_required(mass_update)
 def ticket_list(request):
     q = None
     context = {}
+    
+    default_sorting = request.GET.get('sort', 'created')
+#    print('sorting0:',default_sorting)
 
     # Auto-create user settings are created for user, if not done so already.
     create_usersettings(request)
@@ -722,7 +725,7 @@ def ticket_list(request):
 
         query_params = {
             'filtering': {'status__in': [1, 2, 3]},
-            'sorting': 'created',
+            'sorting': default_sorting,
         }
     else:
         queues = request.GET.getlist('queue')
@@ -773,12 +776,14 @@ def ticket_list(request):
 
         ### SORTING
         sort = request.GET.get('sort', None)
-        if sort not in ('status', 'assigned_to', 'created', 'title', 'queue', 'priority'):
-            sort = 'created'
+#        if sort not in ('status', 'assigned_to', 'created', 'title', 'queue', 'priority'):
+#            sort = 'created'
         query_params['sorting'] = sort
 
         sortreverse = request.GET.get('sortreverse', None)
         query_params['sortreverse'] = sortreverse
+
+#    print('sorting1:',query_params['sorting'])
 
     try:
         ticket_qs = apply_query(Ticket.objects.select_related(), query_params)
@@ -786,7 +791,7 @@ def ticket_list(request):
         # invalid parameters in query, return default query
         query_params = {
             'filtering': {'status__in': [1, 2, 3]},
-            'sorting': 'created',
+            'sorting': default_sorting,
         }
         ticket_qs = apply_query(Ticket.objects.select_related(), query_params)
 
@@ -846,7 +851,8 @@ def ticket_list(request):
             from_saved_query=from_saved_query,
             saved_query=saved_query,
             search_message=search_message,
-            tags_enabled=HAS_TAG_SUPPORT
+            tags_enabled=HAS_TAG_SUPPORT,
+            default_sorting=default_sorting,
         )))
 ticket_list = staff_member_required(ticket_list)
 
