@@ -8,15 +8,15 @@ views/public.py - All public facing views, eg non-staff (no authentication
 """
 
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import loader, Context, RequestContext
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from helpdesk import settings as helpdesk_settings
 from helpdesk.forms import PublicTicketForm
-from helpdesk.lib import send_templated_mail, text_is_spam
+from helpdesk.lib import text_is_spam
 from helpdesk.models import Ticket, Queue, UserSettings, KBCategory
 
 
@@ -94,7 +94,7 @@ def view_ticket(request):
                 id=ticket_id,
                 queue__slug__iexact=queue,
                 submitter_email__iexact=email)
-        except:
+        except Ticket.DoesNotExist:
             ticket = False
             error_message = _('Invalid ticket ID or e-mail address. Please try again.')
 

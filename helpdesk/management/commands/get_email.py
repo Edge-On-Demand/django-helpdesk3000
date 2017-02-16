@@ -10,28 +10,23 @@ scripts/get_email.py - Designed to be run from cron, this script checks the
                        adding to existing tickets if needed)
 """
 
-import email
 import imaplib
 import mimetypes
 import poplib
 import re
-
 from datetime import timedelta
+import email
 from email.header import decode_header
-from email.Utils import parseaddr, collapse_rfc2231_value
+from email.Utils import parseaddr, collapse_rfc2231_value # pylint: disable=no-name-in-module,import-error
 from optparse import make_option
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils.translation import ugettext as _
+from django.utils import timezone
+
 from helpdesk import settings
-
-try:
-    from django.utils import timezone
-except ImportError:
-    from datetime import datetime as timezone
-
 from helpdesk.lib import send_templated_mail, safe_template_context
 from helpdesk.models import Queue, Ticket, FollowUp, Attachment, IgnoreEmail
 
@@ -140,9 +135,9 @@ def process_queue(q, quiet=False):
 def decodeUnknown(charset, string):
     if not charset:
         try:
-            return string.decode('utf-8','ignore')
-        except:
-            return string.decode('iso8859-1','ignore')
+            return string.decode('utf-8', 'ignore')
+        except UnicodeDecodeError:
+            return string.decode('iso8859-1', 'ignore')
     return unicode(string, charset)
 
 def decode_mail_headers(string):
@@ -172,7 +167,7 @@ def ticket_from_message(message, queue, quiet):
                 return False
             return True
 
-    matchobj = re.match(r".*\["+queue.slug+"-(?P<id>\d+)\]", subject)
+    matchobj = re.match(r".*\["+queue.slug+r"-(?P<id>\d+)\]", subject)
     if matchobj:
         # This is a reply or forward.
         ticket = matchobj.group('id')
@@ -190,7 +185,7 @@ def ticket_from_message(message, queue, quiet):
         if name:
             name = collapse_rfc2231_value(name)
 
-        if part.get_content_maintype() == 'text' and name == None:
+        if part.get_content_maintype() == 'text' and name is None:
             if part.get_content_subtype() == 'plain':
                 body_plain = decodeUnknown(part.get_content_charset(), part.get_payload(decode=True))
             else:
@@ -239,7 +234,7 @@ def ticket_from_message(message, queue, quiet):
     if smtp_priority in high_priority_types or smtp_importance in high_priority_types:
         priority = 2
 
-    if ticket == None:
+    if ticket is None:
         t = Ticket(
             title=subject,
             queue=queue,
@@ -257,11 +252,11 @@ def ticket_from_message(message, queue, quiet):
         t.save()
 
     f = FollowUp(
-        ticket = t,
-        title = _('E-Mail Received from %(sender_email)s' % {'sender_email': sender_email}),
-        date = timezone.now(),
-        public = True,
-        comment = body,
+        ticket=t,
+        title=_('E-Mail Received from %(sender_email)s' % {'sender_email': sender_email}),
+        date=timezone.now(),
+        public=True,
+        comment=body,
     )
 
     if t.status == Ticket.REOPENED_STATUS:
@@ -273,17 +268,17 @@ def ticket_from_message(message, queue, quiet):
     if not quiet:
         print (" [%s-%s] %s" % (t.queue.slug, t.id, t.title,)).encode('ascii', 'replace')
 
-    for file in files:
-        if file['content']:
-            filename = file['filename'].encode('ascii', 'replace').replace(' ', '_')
+    for fileObj in files:
+        if fileObj['content']:
+            filename = fileObj['filename'].encode('ascii', 'replace').replace(' ', '_')
             filename = re.sub('[^a-zA-Z0-9._-]+', '', filename)
             a = Attachment(
                 followup=f,
                 filename=filename,
-                mime_type=file['type'],
-                size=len(file['content']),
+                mime_type=fileObj['type'],
+                size=len(fileObj['content']),
                 )
-            a.file.save(filename, ContentFile(file['content']), save=False)
+            a.file.save(filename, ContentFile(fileObj['content']), save=False)
             a.save()
             if not quiet:
                 print "    - %s" % filename
@@ -351,4 +346,3 @@ def ticket_from_message(message, queue, quiet):
 
 if __name__ == '__main__':
     process_email()
-

@@ -8,13 +8,12 @@ urls.py - Mapping of URL's to our various views. Note we always used NAMED
 """
 
 from django.conf import settings
-import django
-if django.get_version().startswith("1.3"):
-    from django.conf.urls.defaults import *
-else:
-    from django.conf.urls import *
+#if django.get_version().startswith("1.3"):
+try:
+    from django.conf.urls.defaults import patterns, url
+except ImportError:
+    from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
-
 from django.views.generic import TemplateView
 
 from helpdesk import settings as helpdesk_settings

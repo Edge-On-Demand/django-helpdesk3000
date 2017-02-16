@@ -1,4 +1,4 @@
-import os, sys
+import os
 PROJECT_DIR = os.path.dirname(__file__)
 DATABASES = {
     'default':{

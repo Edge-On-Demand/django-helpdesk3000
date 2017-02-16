@@ -2,18 +2,17 @@ from __future__ import print_function
 
 # Make warnings throw explicit exceptions so we're forced to fix them.
 import warnings
-warnings.simplefilter('error', RuntimeWarning)
 
 from django.test import TestCase
 from django.core import mail
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 
-import six
+#import six
 
-from helpdesk.models import (
-    Queue, CustomField, Ticket, User, EmailTemplate,
-)
+from helpdesk.models import Queue, CustomField, Ticket, User, EmailTemplate
+
+warnings.simplefilter('error', RuntimeWarning)
 
 class TicketBasicsTestCase(TestCase):
     

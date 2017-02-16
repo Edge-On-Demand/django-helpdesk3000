@@ -31,9 +31,7 @@ def sortable_column_link(request, name, sort_param, label=None, default=''):
     sort_order = request.GET.get(sort_param, default or '').split(',')
     sort_order = [_.strip() for _ in sort_order if _.strip()]
     arrow = ''
-    #print 'GET:',request.GET
     params = request.GET.copy()
-#    print 'params:',params
     
     if name in sort_order:
         arrow = '<b>&uarr;<b/>'
@@ -46,12 +44,10 @@ def sortable_column_link(request, name, sort_param, label=None, default=''):
     
     params = dict(
         (k, ','.join(map(str, v)) if isinstance(v, list) and len(v) > 1 else (v and v[0]))
-        for k,v in params.iterlists())
-#    print 'params:',params
+        for k, v in params.iterlists())
     kwargs = dict(
         url=request.path + '?' + urllib.urlencode(params),
         name=re.sub('^[^a-zA-Z#]+', '', label or name),
         arrow=arrow
     )
     return '<a href="{url}">{name}{arrow}</a>'.format(**kwargs)
-    

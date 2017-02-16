@@ -1,5 +1,9 @@
 
-from django.conf.urls import *
+from django.conf.urls import include
+try:
+    from django.conf.urls.defaults import patterns#, url
+except ImportError:
+    from django.conf.urls import patterns#, url
 from django.contrib import admin
 
 admin.autodiscover()

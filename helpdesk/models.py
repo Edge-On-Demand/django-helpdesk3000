@@ -6,24 +6,27 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 models.py - Model (and hence database) definitions. This is the core of the
             helpdesk structure.
 """
+import cPickle
 
 from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
+from django.http import HttpRequest
 
 try:
     from django.utils import timezone
 except ImportError:
     from datetime import datetime as timezone
 
-from helpdesk.settings import HAS_TAG_SUPPORT
-from helpdesk.lib import (
-    send_templated_mail, query_to_dict, apply_query, safe_template_context,
-)
+from helpdesk.settings import DEFAULT_USER_SETTINGS, HAS_TAG_SUPPORT
+from helpdesk.lib import send_templated_mail, safe_template_context
 
 if HAS_TAG_SUPPORT:
-    from tagging.fields import TagField
+    from tagging.fields import TagField # pylint: disable=import-error
 
 class Queue(models.Model):
     """
@@ -396,7 +399,6 @@ class Ticket(models.Model):
         """
         A HTML <span> providing a CSS_styled representation of the priority.
         """
-        from django.utils.safestring import mark_safe
         return mark_safe(u"<span class='dk-label dk-label-priority%s'>%s</span>" % (self.priority, self.priority))
     get_priority_span = property(_get_priority_span)
 
@@ -407,7 +409,8 @@ class Ticket(models.Model):
         held_msg = ''
         if self.on_hold: held_msg = _(' - On Hold')
         dep_msg = ''
-        if self.can_be_resolved == False: dep_msg = _(' - Open dependencies')
+        if self.can_be_resolved is False:
+            dep_msg = _(' - Open dependencies')
         return u'%s%s%s' % (self.get_status_display(), held_msg, dep_msg)
     get_status = property(_get_status)
 
@@ -416,11 +419,9 @@ class Ticket(models.Model):
         Returns a publicly-viewable URL for this ticket, used when giving
         a URL to the submitter of a ticket.
         """
-        from django.contrib.sites.models import Site
-        from django.core.urlresolvers import reverse
         try:
             site = Site.objects.get_current()
-        except:
+        except Site.DoesNotExist:
             site = Site(domain='configure-django-sites.com')
         return u"http://%s%s?ticket=%s&email=%s" % (
             site.domain,
@@ -435,11 +436,9 @@ class Ticket(models.Model):
         Returns a staff-only URL for this ticket, used when giving a URL to
         a staff member (in emails etc)
         """
-        from django.contrib.sites.models import Site
-        from django.core.urlresolvers import reverse
         try:
             site = Site.objects.get_current()
-        except:
+        except Site.DoesNotExist:
             site = Site(domain='configure-django-sites.com')
         return u"http://%s%s" % (
             site.domain,
@@ -639,7 +638,7 @@ class FollowUp(models.Model):
 
     date = models.DateTimeField(
         _('Date'), 
-        default = timezone.now()
+        default=timezone.now
         )
 
     title = models.CharField(
@@ -725,17 +724,17 @@ class TicketChange(models.Model):
         )
 
     def __unicode__(self):
-        str = u'%s ' % self.field
+        s = u'%s ' % self.field
         if not self.new_value:
-            str += ugettext('removed')
+            s += ugettext('removed')
         elif not self.old_value:
-            str += ugettext('set to %s') % self.new_value
+            s += ugettext('set to %s') % self.new_value
         else:
-            str += ugettext('changed from "%(old_value)s" to "%(new_value)s"') % {
+            s += ugettext('changed from "%(old_value)s" to "%(new_value)s"') % {
                 'old_value': self.old_value,
                 'new_value': self.new_value
-                }
-        return str
+            }
+        return s
 
 
 def attachment_path(instance, filename):
@@ -746,7 +745,7 @@ def attachment_path(instance, filename):
     import os
     from django.conf import settings
     os.umask(0)
-    path = 'helpdesk/attachments/%s/%s' % (instance.followup.ticket.ticket_for_url, instance.followup.id )
+    path = 'helpdesk/attachments/%s/%s' % (instance.followup.ticket.ticket_for_url, instance.followup.id)
     att_path = os.path.join(settings.MEDIA_ROOT, path)
     if not os.path.exists(att_path):
         os.makedirs(att_path, 0777)
@@ -1093,13 +1092,11 @@ class UserSettings(models.Model):
 
     def _set_settings(self, data):
         # data should always be a Python dictionary.
-        import cPickle
         from helpdesk.lib import b64encode
         self.settings_pickled = b64encode(cPickle.dumps(data))
 
     def _get_settings(self):
         # return a python dictionary representing the pickled data.
-        import cPickle
         from helpdesk.lib import b64decode
         try:
             return cPickle.loads(b64decode(str(self.settings_pickled)))
@@ -1115,9 +1112,8 @@ class UserSettings(models.Model):
         verbose_name = _('User Settings')
         verbose_name_plural = _('User Settings')
 
-from django.http import HttpRequest
 
-def create_usersettings(sender, created_models=[], instance=None, created=False, **kwargs):
+def create_usersettings(sender, created_models=None, instance=None, created=False, **kwargs):
     """
     Helper function to create UserSettings instances as 
     required, eg when we first create the UserSettings database
@@ -1126,13 +1122,18 @@ def create_usersettings(sender, created_models=[], instance=None, created=False,
     If we end up with users with no UserSettings, then we get horrible
     'DoesNotExist: UserSettings matching query does not exist.' errors.
     """
-    from helpdesk.settings import DEFAULT_USER_SETTINGS
+    created_models = created_models or []
+    
+    qs = UserSettings.objects
+    if 'using' in kwargs:
+        qs = qs.using(kwargs['using'])
+        
     if isinstance(sender, HttpRequest) and sender.user.is_authenticated():
-        s, created = UserSettings.objects.get_or_create(user=sender.user, defaults={'settings': DEFAULT_USER_SETTINGS})
+        s, created = qs.get_or_create(user=sender.user, defaults={'settings': DEFAULT_USER_SETTINGS})
         s.save()
     elif sender == User and created:
         # This is a new user, so lets create their settings entry.
-        s, created = UserSettings.objects.get_or_create(user=instance, defaults={'settings': DEFAULT_USER_SETTINGS})
+        s, created = qs.get_or_create(user=instance, defaults={'settings': DEFAULT_USER_SETTINGS})
         s.save()
     elif UserSettings in created_models:
         # We just created the UserSettings model, lets create a UserSettings
@@ -1141,9 +1142,9 @@ def create_usersettings(sender, created_models=[], instance=None, created=False,
         # exist.
         for u in User.objects.all():
             try:
-                s = UserSettings.objects.get(user=u)
+                s = qs.get(user=u)
             except UserSettings.DoesNotExist:
-                s = UserSettings(user=u, settings=DEFAULT_USER_SETTINGS)
+                s = qs(user=u, settings=DEFAULT_USER_SETTINGS)
                 s.save()
 
 models.signals.post_syncdb.connect(create_usersettings)
@@ -1215,13 +1216,10 @@ class IgnoreEmail(models.Model):
         own_parts = self.email_address.split("@")
         email_parts = email.split("@")
 
-        if self.email_address == email                              \
-        or own_parts[0] == "*" and own_parts[1] == email_parts[1]   \
-        or own_parts[1] == "*" and own_parts[0] == email_parts[0]   \
-        or own_parts[0] == "*" and own_parts[1] == "*":
-            return True
-        else:
-            return False
+        return self.email_address == email \
+            or own_parts[0] == "*" and own_parts[1] == email_parts[1]   \
+            or own_parts[1] == "*" and own_parts[0] == email_parts[0]   \
+            or own_parts[0] == "*" and own_parts[1] == "*"
 
 class TicketCC(models.Model):
     """

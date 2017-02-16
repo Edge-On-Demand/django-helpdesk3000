@@ -16,11 +16,7 @@ import sys
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils.translation import ugettext as _
-
-try:
-    from django.utils import timezone
-except ImportError:
-    from datetime import datetime as timezone
+from django.utils import timezone
 
 from helpdesk.models import Queue, Ticket, FollowUp, EscalationExclusion, TicketChange
 from helpdesk.lib import send_templated_mail, safe_template_context
@@ -141,8 +137,8 @@ def escalate_tickets(queues, verbose):
                     )
 
             f = FollowUp(
-                ticket = t,
-                title = 'Ticket Escalated',
+                ticket=t,
+                title='Ticket Escalated',
                 date=timezone.now(),
                 public=True,
                 comment=_('Ticket escalated after %s days' % q.escalate_days),
@@ -150,10 +146,10 @@ def escalate_tickets(queues, verbose):
             f.save()
 
             tc = TicketChange(
-                followup = f,
-                field = _('Priority'),
-                old_value = t.priority + 1,
-                new_value = t.priority,
+                followup=f,
+                field=_('Priority'),
+                old_value=t.priority + 1,
+                new_value=t.priority,
             )
             tc.save()
 

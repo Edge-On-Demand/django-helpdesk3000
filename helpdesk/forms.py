@@ -7,7 +7,7 @@ forms.py - Definitions of newforms-based forms for creating and maintaining
            tickets.
 """
 
-from StringIO import StringIO
+import mimetypes
 
 from django import forms
 from django.forms import extras
@@ -64,7 +64,7 @@ class EditTicketForm(forms.ModelForm):
                 fieldclass = forms.ChoiceField
                 choices = field.choices_as_array
                 if field.empty_selection_list:
-                    choices.insert(0, ('','---------' ) )
+                    choices.insert(0, ('', '---------'))
                 instanceargs['choices'] = choices
             elif field.data_type == 'boolean':
                 fieldclass = forms.BooleanField
@@ -85,20 +85,17 @@ class EditTicketForm(forms.ModelForm):
             
             self.fields['custom_%s' % field.name] = fieldclass(**instanceargs)
 
-
     def save(self, *args, **kwargs):
-        
         for field, value in self.cleaned_data.items():
             if field.startswith('custom_'):
                 field_name = field.replace('custom_', '')
                 customfield = CustomField.objects.get(name=field_name)
                 try:
                     cfv = TicketCustomFieldValue.objects.get(ticket=self.instance, field=customfield)
-                except:
+                except TicketCustomFieldValue.DoesNotExist:
                     cfv = TicketCustomFieldValue(ticket=self.instance, field=customfield)
                 cfv.value = value
                 cfv.save()
-        
         return super(EditTicketForm, self).save(*args, **kwargs)
 
 
@@ -215,7 +212,7 @@ class TicketForm(forms.Form):
                 fieldclass = forms.ChoiceField
                 choices = field.choices_as_array
                 if field.empty_selection_list:
-                    choices.insert(0, ('','---------' ) )
+                    choices.insert(0, ('', '---------'))
                 instanceargs['choices'] = choices
             elif field.data_type == 'boolean':
                 fieldclass = forms.BooleanField
@@ -245,15 +242,16 @@ class TicketForm(forms.Form):
 
         q = Queue.objects.get(id=int(self.cleaned_data['queue']))
 
-        t = Ticket( title = self.cleaned_data['title'],
-                    submitter_email = self.cleaned_data['submitter_email'],
-                    created = timezone.now(),
-                    status = Ticket.OPEN_STATUS,
-                    queue = q,
-                    description = self.cleaned_data['body'],
-                    priority = self.cleaned_data['priority'],
-                    due_date = self.cleaned_data['due_date'],
-                  )
+        t = Ticket(
+            title=self.cleaned_data['title'],
+            submitter_email=self.cleaned_data['submitter_email'],
+            created=timezone.now(),
+            status=Ticket.OPEN_STATUS,
+            queue=q,
+            description=self.cleaned_data['body'],
+            priority=self.cleaned_data['priority'],
+            due_date=self.cleaned_data['due_date'],
+        )
 
         if HAS_TAG_SUPPORT:
             t.tags = self.cleaned_data['tags']
@@ -276,13 +274,14 @@ class TicketForm(forms.Form):
                             value=value)
                 cfv.save()
 
-        f = FollowUp(   ticket = t,
-                        title = _('Ticket Opened'),
-                        date = timezone.now(),
-                        public = True,
-                        comment = self.cleaned_data['body'],
-                        user = user,
-                     )
+        f = FollowUp(   
+            ticket=t,
+            title=_('Ticket Opened'),
+            date=timezone.now(),
+            public=True,
+            comment=self.cleaned_data['body'],
+            user=user,
+        )
         if self.cleaned_data['assigned_to']:
             f.title = _('Ticket Opened & Assigned to %(name)s') % {
                 'name': t.get_assigned_to
@@ -292,19 +291,18 @@ class TicketForm(forms.Form):
         
         files = []
         if self.cleaned_data['attachment']:
-            import mimetypes
-            file = self.cleaned_data['attachment']
-            filename = file.name.replace(' ', '_')
+            f = self.cleaned_data['attachment']
+            filename = f.name.replace(' ', '_')
             a = Attachment(
                 followup=f,
                 filename=filename,
                 mime_type=mimetypes.guess_type(filename)[0] or 'application/octet-stream',
-                size=file.size,
-                )
-            a.file.save(file.name, file, save=False)
+                size=f.size,
+            )
+            a.file.save(f.name, f, save=False)
             a.save()
             
-            if file.size < getattr(settings, 'MAX_EMAIL_ATTACHMENT_SIZE', 512000):
+            if f.size < getattr(settings, 'MAX_EMAIL_ATTACHMENT_SIZE', 512000):
                 # Only files smaller than 512kb (or as defined in 
                 # settings.MAX_EMAIL_ATTACHMENT_SIZE) are sent via email.
                 files.append(a.file.path)
@@ -327,7 +325,9 @@ class TicketForm(forms.Form):
                 )
             messages_sent_to.append(t.submitter_email)
 
-        if t.assigned_to and t.assigned_to != user and t.assigned_to.usersettings.settings.get('email_on_ticket_assign', False) and t.assigned_to.email and t.assigned_to.email not in messages_sent_to:
+        if t.assigned_to and t.assigned_to != user \
+        and t.assigned_to.usersettings.settings.get('email_on_ticket_assign', False) \
+        and t.assigned_to.email and t.assigned_to.email not in messages_sent_to:
             send_templated_mail(
                 'assigned_owner',
                 context,
@@ -335,7 +335,7 @@ class TicketForm(forms.Form):
                 sender=q.from_address,
                 fail_silently=True,
                 files=files,
-                )
+            )
             messages_sent_to.append(t.assigned_to.email)
 
         if q.new_ticket_cc and q.new_ticket_cc not in messages_sent_to:
@@ -346,7 +346,7 @@ class TicketForm(forms.Form):
                 sender=q.from_address,
                 fail_silently=True,
                 files=files,
-                )
+            )
             messages_sent_to.append(q.new_ticket_cc)
 
         if q.updated_ticket_cc and q.updated_ticket_cc != q.new_ticket_cc and q.updated_ticket_cc not in messages_sent_to:
@@ -357,7 +357,7 @@ class TicketForm(forms.Form):
                 sender=q.from_address,
                 fail_silently=True,
                 files=files,
-                )
+            )
 
         return t
 
@@ -438,7 +438,7 @@ class PublicTicketForm(forms.Form):
                 fieldclass = forms.ChoiceField
                 choices = field.choices_as_array
                 if field.empty_selection_list:
-                    choices.insert(0, ('','---------' ) )
+                    choices.insert(0, ('', '---------'))
                 instanceargs['choices'] = choices
             elif field.data_type == 'boolean':
                 fieldclass = forms.BooleanField
@@ -467,15 +467,15 @@ class PublicTicketForm(forms.Form):
         q = Queue.objects.get(id=int(self.cleaned_data['queue']))
 
         t = Ticket(
-            title = self.cleaned_data['title'],
-            submitter_email = self.cleaned_data['submitter_email'],
-            created = timezone.now(),
-            status = Ticket.OPEN_STATUS,
-            queue = q,
-            description = self.cleaned_data['body'],
-            priority = self.cleaned_data['priority'],
-            due_date = self.cleaned_data['due_date'],
-            )
+            title=self.cleaned_data['title'],
+            submitter_email=self.cleaned_data['submitter_email'],
+            created=timezone.now(),
+            status=Ticket.OPEN_STATUS,
+            queue=q,
+            description=self.cleaned_data['body'],
+            priority=self.cleaned_data['priority'],
+            due_date=self.cleaned_data['due_date'],
+        )
 
         t.save()
 
@@ -483,36 +483,33 @@ class PublicTicketForm(forms.Form):
             if field.startswith('custom_'):
                 field_name = field.replace('custom_', '')
                 customfield = CustomField.objects.get(name=field_name)
-                cfv = TicketCustomFieldValue(ticket=t,
-                            field=customfield,
-                            value=value)
+                cfv = TicketCustomFieldValue(ticket=t, field=customfield, value=value)
                 cfv.save()
 
         f = FollowUp(
-            ticket = t,
-            title = _('Ticket Opened Via Web'),
-            date = timezone.now(),
-            public = True,
-            comment = self.cleaned_data['body'],
-            )
+            ticket=t,
+            title=_('Ticket Opened Via Web'),
+            date=timezone.now(),
+            public=True,
+            comment=self.cleaned_data['body'],
+        )
 
         f.save()
 
         files = []
         if self.cleaned_data['attachment']:
-            import mimetypes
-            file = self.cleaned_data['attachment']
-            filename = file.name.replace(' ', '_')
+            f = self.cleaned_data['attachment']
+            filename = f.name.replace(' ', '_')
             a = Attachment(
                 followup=f,
                 filename=filename,
                 mime_type=mimetypes.guess_type(filename)[0] or 'application/octet-stream',
-                size=file.size,
-                )
-            a.file.save(file.name, file, save=False)
+                size=f.size,
+            )
+            a.file.save(f.name, f, save=False)
             a.save()
             
-            if file.size < getattr(settings, 'MAX_EMAIL_ATTACHMENT_SIZE', 512000):
+            if f.size < getattr(settings, 'MAX_EMAIL_ATTACHMENT_SIZE', 512000):
                 # Only files smaller than 512kb (or as defined in 
                 # settings.MAX_EMAIL_ATTACHMENT_SIZE) are sent via email.
                 files.append(a.file.path)
@@ -564,7 +561,8 @@ class UserSettingsForm(forms.Form):
 
     email_on_ticket_change = forms.BooleanField(
         label=_('E-mail me on ticket change?'),
-        help_text=_('If you\'re the ticket owner and the ticket is changed via the web by somebody else, do you want to receive an e-mail?'),
+        help_text=_('If you\'re the ticket owner and the ticket is changed via the web by '
+            'somebody else, do you want to receive an e-mail?'),
         required=False,
         )
 
@@ -590,7 +588,9 @@ class UserSettingsForm(forms.Form):
 
     use_email_as_submitter = forms.BooleanField(
         label=_('Use my e-mail address when submitting tickets?'),
-        help_text=_('When you submit a ticket, do you want to automatically use your e-mail address as the submitter address? You can type a different e-mail address when entering the ticket if needed, this option only changes the default.'),
+        help_text=_('When you submit a ticket, do you want to automatically use your e-mail '
+            'address as the submitter address? You can type a different e-mail address when '
+            'entering the ticket if needed, this option only changes the default.'),
         required=False,
         )
 

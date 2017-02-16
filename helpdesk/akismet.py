@@ -55,10 +55,10 @@ Usage example::
 """
 
 
-import os, sys
+import os
 from urllib import urlencode
-
 import socket
+
 if hasattr(socket, 'setdefaulttimeout'):
     # Set the default timeout on sockets to 5 seconds
     socket.setdefaulttimeout(5)
@@ -179,17 +179,14 @@ class Akismet(object):
         """
         if self.key is None:
             raise APIKeyError("Your have not set an API key.")
-        data = { 'key': self.key, 'blog': self.blog_url }
+        data = {'key': self.key, 'blog': self.blog_url}
         # this function *doesn't* use the key as part of the URL
         url = 'http://%sverify-key' % self.baseurl
         # we *don't* trap the error here
         # so if akismet is down it will raise an HTTPError or URLError
         headers = {'User-Agent' : self.user_agent}
         resp = self._safeRequest(url, urlencode(data), headers)
-        if resp.lower() == 'valid':
-            return True
-        else:
-            return False
+        return bool(resp.lower() == 'valid')
 
     def _build_data(self, comment, data):
         """

@@ -11,16 +11,15 @@ The API documentation can be accessed by visiting http://helpdesk/api/help/
 through templates/helpdesk/help_api.html.
 """
 
-from django import forms
+import json
+
+# from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
-from django.template import loader, Context
-#from django.utils import simplejson
+# from django.template import loader, Context
 from django.views.decorators.csrf import csrf_exempt
-
-import json
 
 try:
     from django.utils import timezone
@@ -32,7 +31,6 @@ from helpdesk.lib import send_templated_mail, safe_template_context
 from helpdesk.models import Ticket, Queue, FollowUp
 
 STATUS_OK = 200
-
 STATUS_ERROR = 400
 STATUS_ERROR_NOT_FOUND = 404
 STATUS_ERROR_PERMISSIONS = 403
@@ -118,7 +116,12 @@ class API:
 
 
     def api_public_list_queues(self):
-        return api_return(STATUS_OK, simplejson.dumps([{"id": "%s" % q.id, "title": "%s" % q.title} for q in Queue.objects.all()]), json=True)
+        return api_return(
+            STATUS_OK,
+            json.dumps([
+                {"id": "%s" % q.id, "title": "%s" % q.title}
+                for q in Queue.objects.all()
+            ]), json=True)
 
 
     def api_public_find_user(self):
@@ -222,7 +225,7 @@ class API:
                         recipients=cc.email_address,
                         sender=ticket.queue.from_address,
                         fail_silently=True,
-                        )
+                    )
                     messages_sent_to.append(cc.email_address)
 
         if ticket.queue.updated_ticket_cc and ticket.queue.updated_ticket_cc not in messages_sent_to:
@@ -232,17 +235,19 @@ class API:
                 recipients=ticket.queue.updated_ticket_cc,
                 sender=ticket.queue.from_address,
                 fail_silently=True,
-                )
+            )
             messages_sent_to.append(ticket.queue.updated_ticket_cc)
 
-        if ticket.assigned_to and self.request.user != ticket.assigned_to and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
+        if ticket.assigned_to and self.request.user != ticket.assigned_to \
+        and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
+        and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
             send_templated_mail(
                 'updated_owner',
                 context,
                 recipients=ticket.assigned_to.email,
                 sender=ticket.queue.from_address,
                 fail_silently=True,
-                )
+            )
 
         ticket.save()
 
@@ -267,7 +272,7 @@ class API:
             user=self.request.user,
             title='Resolved',
             public=True,
-            )
+        )
         f.save()
 
         context = safe_template_context(ticket)
@@ -308,14 +313,16 @@ class API:
                 )
             messages_sent_to.append(ticket.queue.updated_ticket_cc)
 
-        if ticket.assigned_to and self.request.user != ticket.assigned_to and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
+        if ticket.assigned_to and self.request.user != ticket.assigned_to \
+        and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
+        and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
             send_templated_mail(
                 'resolved_resolved',
                 context,
                 recipients=ticket.assigned_to.email,
                 sender=ticket.queue.from_address,
                 fail_silently=True,
-                )
+            )
 
         ticket.resoltuion = f.comment
         ticket.status = Ticket.RESOLVED_STATUS
@@ -323,4 +330,3 @@ class API:
         ticket.save()
 
         return api_return(STATUS_OK)
-

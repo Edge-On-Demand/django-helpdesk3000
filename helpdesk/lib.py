@@ -6,21 +6,25 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 lib.py - Common functions (eg multipart e-mail)
 """
 
-chart_colours = ('80C65A', '990066', 'FF9900', '3399CC', 'BBCCED', '3399CC', 'FFCC33')
-
 try:
-    from base64 import urlsafe_b64encode as b64encode
+    from base64 import urlsafe_b64encode as b64encode # pylint: disable=unused-import
 except ImportError:
-    from base64 import encodestring as b64encode
+    from base64 import encodestring as b64encode # pylint: disable=unused-import
 try:
-    from base64 import urlsafe_b64decode as b64decode
+    from base64 import urlsafe_b64decode as b64decode # pylint: disable=unused-import
 except ImportError:
-    from base64 import decodestring as b64decode
+    from base64 import decodestring as b64decode # pylint: disable=unused-import
 
 import logging
+
+from django.utils.safestring import mark_safe
+from django.utils.encoding import smart_str
+from django.contrib.sites.models import Site
+from django.conf import settings
+
 logger = logging.getLogger('helpdesk')
 
-from django.utils.encoding import smart_str
+chart_colours = ('80C65A', '990066', 'FF9900', '3399CC', 'BBCCED', '3399CC', 'FFCC33')
 
 def send_templated_mail(template_name, email_context, recipients, sender=None, bcc=None, fail_silently=False, files=None):
     """
@@ -75,8 +79,7 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
         try:
             t = EmailTemplate.objects.get(template_name__iexact=template_name, locale__isnull=True)
         except EmailTemplate.DoesNotExist:
-            logger.warning('template "%s" does not exist, no mail sent' %
-               template_name)
+            logger.warning('template "%s" does not exist, no mail sent', template_name)
             return # just ignore if template doesn't exist
 
     if not sender:
@@ -90,42 +93,39 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
 
     email_html_base_file = os.path.join('helpdesk', locale, 'email_html_base.html')
 
-
-    ''' keep new lines in html emails '''
-    from django.utils.safestring import mark_safe
-
     if context.has_key('comment') and context['comment']:
         html_txt = context['comment']
         html_txt = html_txt.replace('\r\n', '<br>')
         context['comment'] = mark_safe(html_txt)
 
     html_part = loader.get_template_from_string(
-        "{%% extends '%s' %%}{%% block title %%}%s{%% endblock %%}{%% block content %%}%s{%% endblock %%}" % (email_html_base_file, t.heading, t.html)
+        "{%% extends '%s' %%}{%% block title %%}%s{%% endblock %%}{%% block content %%}%s{%% endblock %%}" \
+            % (email_html_base_file, t.heading, t.html)
         ).render(context)
 
     subject_part = loader.get_template_from_string(
         "{{ ticket.ticket }} {{ ticket.title|safe }} %s" % t.subject
         ).render(context)
 
-    if isinstance(recipients,(str,unicode)):
+    if isinstance(recipients, (str, unicode)):
         if recipients.find(','):
             recipients = recipients.split(',')
-    elif type(recipients) != list:
-        recipients = [recipients,]
+    elif not isinstance(recipients, list):
+        recipients = [recipients]
 
-    msg = EmailMultiAlternatives(   subject_part,
-                                    text_part,
-                                    sender,
-                                    recipients,
-                                    bcc=bcc)
+    msg = EmailMultiAlternatives(
+        subject_part,
+        text_part,
+        sender,
+        recipients,
+        bcc=bcc)
     msg.attach_alternative(html_part, "text/html")
 
     if files:
-        if type(files) != list:
+        if not isinstance(files, list):
             files = [files,]
-
-        for file in files:
-            msg.attach_file(file)
+        for f in files:
+            msg.attach_file(f)
 
     return msg.send(fail_silently)
 
@@ -166,15 +166,14 @@ def apply_query(queryset, params):
         sorting: The name of the column to sort by
     """
     for key in params['filtering'].keys():
-        filter = {key: params['filtering'][key]}
-        queryset = queryset.filter(**filter)
+        kwargs = {key: params['filtering'][key]}
+        queryset = queryset.filter(**kwargs)
 
     if params.get('other_filter', None):
         # eg a Q() set
         queryset = queryset.filter(params['other_filter'])
 
     sorting = params.get('sorting', None)
-#    print('sorting2:',sorting)
     if sorting:
         sortreverse = params.get('sortreverse', None)
         if sortreverse:
@@ -205,19 +204,20 @@ def safe_template_context(ticket):
         }
     queue = ticket.queue
 
-    for field in (  'title', 'slug', 'email_address', 'from_address', 'locale'):
+    for field in ('title', 'slug', 'email_address', 'from_address', 'locale'):
         attr = getattr(queue, field, None)
         if callable(attr):
             context['queue'][field] = attr()
         else:
             context['queue'][field] = attr
 
-    for field in (  'title', 'created', 'modified', 'submitter_email',
-                    'status', 'get_status_display', 'on_hold', 'description',
-                    'resolution', 'priority', 'get_priority_display',
-                    'last_escalation', 'ticket', 'ticket_for_url',
-                    'get_status', 'ticket_url', 'staff_url', '_get_assigned_to'
-                 ):
+    for field in (
+        'title', 'created', 'modified', 'submitter_email',
+        'status', 'get_status_display', 'on_hold', 'description',
+        'resolution', 'priority', 'get_priority_display',
+        'last_escalation', 'ticket', 'ticket_for_url',
+        'get_status', 'ticket_url', 'staff_url', '_get_assigned_to'
+    ):
         attr = getattr(ticket, field, None)
         if callable(attr):
             context['ticket'][field] = '%s' % attr()
@@ -236,15 +236,13 @@ def text_is_spam(text, request):
     # This will return 'True' is the given text is deemed to be spam, or
     # False if it is not spam. If it cannot be checked for some reason, we
     # assume it isn't spam.
-    from django.contrib.sites.models import Site
-    from django.conf import settings
     try:
         from helpdesk.akismet import Akismet
-    except:
+    except ImportError:
         return False
     try:
         site = Site.objects.get_current()
-    except:
+    except Site.DoesNotExist:
         site = Site(domain='configure-django-sites.com')
 
     ak = Akismet(
@@ -253,10 +251,10 @@ def text_is_spam(text, request):
     )
 
     if hasattr(settings, 'TYPEPAD_ANTISPAM_API_KEY'):
-        ak.setAPIKey(key = settings.TYPEPAD_ANTISPAM_API_KEY)
+        ak.setAPIKey(key=settings.TYPEPAD_ANTISPAM_API_KEY)
         ak.baseurl = 'api.antispam.typepad.com/1.1/'
     elif hasattr(settings, 'AKISMET_API_KEY'):
-        ak.setAPIKey(key = settings.AKISMET_API_KEY)
+        ak.setAPIKey(key=settings.AKISMET_API_KEY)
     else:
         return False
 
