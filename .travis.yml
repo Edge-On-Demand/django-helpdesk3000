@@ -6,7 +6,7 @@ env:
 #    - DJANGO=1.4.3
     - DJANGO=1.5.5
 install:
-    - pip install -r requirements-text.txt
+    - pip install pylint tox
 #    - pip install argparse --use-mirrors
     - pip install -q Django==$DJANGO --use-mirrors
 script:
