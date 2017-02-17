@@ -1,14 +1,8 @@
 language: python
 python:
-    - "2.7"
-env:
-#    - DJANGO=1.3.5
-#    - DJANGO=1.4.3
-    - DJANGO=1.5.5
+- "2.7"
 install:
-    - pip install pylint tox
-#    - pip install argparse --use-mirrors
-    - pip install -q Django==$DJANGO --use-mirrors
+- pip install pylint tox
 script:
-    - ./pep8.sh
-    - tox
+- ./pep8.sh
+- tox

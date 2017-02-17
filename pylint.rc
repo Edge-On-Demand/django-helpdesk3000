@@ -23,7 +23,7 @@ profile=no
 # Ignore all auto-generated South migration directories.
 # Ignore all auto-generated Django managers.
 # Ignore all auto-generated Django Agent Hierachy Filters
-ignore=CVS,migrations,managers,agenthierarchy_filters
+ignore=migrations,south_migrations
 
 # Pickle collected data for later comparisons.
 persistent=yes
