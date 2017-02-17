@@ -9,3 +9,4 @@ docs/doctrees/*
 =*
 .env*
 *.egg-info
+/.tox/

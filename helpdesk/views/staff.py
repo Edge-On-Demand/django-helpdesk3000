@@ -29,6 +29,13 @@ from django.utils.html import escape
 from django.utils import timezone
 from django import forms
 from django.utils import timezone
+from django.template import loader, Context
+
+try:
+    from django.template import engines
+    template_func = engines['django'].from_string
+except ImportError:  # occurs in django < 1.8
+    template_func = loader.get_template_from_string
 
 from helpdesk.lib import b64encode, b64decode
 from helpdesk.forms import (
@@ -415,13 +422,12 @@ def update_ticket(request, ticket_id, public=False):
 
     # We need to allow the 'ticket' and 'queue' contexts to be applied to the
     # comment.
-    from django.template import loader, Context
     context = safe_template_context(ticket)
     # this line sometimes creates problems if code is sent as a comment.
     # if comment contains some django code, like "why does {% if bla %} crash",
     # then the following line will give us a crash, since django expects {% if %}
     # to be closed with an {% endif %} tag.
-    comment = loader.get_template_from_string(comment).render(Context(context))
+    comment = template_func(comment).render(Context(context))
 
     if owner is -1 and ticket.assigned_to:
         owner = ticket.assigned_to.id

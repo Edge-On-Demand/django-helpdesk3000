@@ -9,5 +9,5 @@ include UPGRADE
 include LICENSE*
 include CHANGELOG
 include requirements-min-django.txt
-include requirements-text.txt
+include requirements-test.txt
 include requirements.txt
