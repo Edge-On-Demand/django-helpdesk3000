@@ -1,10 +1,13 @@
-include README*
-include UPGRADE
-include LICENSE*
-include CHANGELOG
-
 recursive-include helpdesk/static/helpdesk *
 recursive-include helpdesk/locale *.po *.mo
 recursive-include helpdesk/templates *
 recursive-include helpdesk/fixtures *.json
 recursive-include docs/html *
+
+include README*
+include UPGRADE
+include LICENSE*
+include CHANGELOG
+include requirements-min-django.txt
+include requirements-text.txt
+include requirements.txt
