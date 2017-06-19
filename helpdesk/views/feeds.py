@@ -36,10 +36,9 @@ class OpenTicketsByUser(Feed):
                 'queue': obj['queue'].title,
                 'username': obj['user'].username,
                 }
-        else:
-            return _("Helpdesk: Open Tickets for %(username)s") % {
-                'username': obj['user'].username,
-                }
+        return _("Helpdesk: Open Tickets for %(username)s") % {
+            'username': obj['user'].username,
+            }
 
     def description(self, obj):
         if obj['queue']:
@@ -47,10 +46,9 @@ class OpenTicketsByUser(Feed):
                 'queue': obj['queue'].title,
                 'username': obj['user'].username,
                 }
-        else:
-            return _("Open and Reopened Tickets for %(username)s") % {
-                'username': obj['user'].username,
-                }
+        return _("Open and Reopened Tickets for %(username)s") % {
+            'username': obj['user'].username,
+            }
 
     def link(self, obj):
         if obj['queue']:
@@ -59,11 +57,10 @@ class OpenTicketsByUser(Feed):
                 obj['user'].id,
                 obj['queue'].id,
                 )
-        else:
-            return u'%s?assigned_to=%s' % (
-                reverse('helpdesk_list'),
-                obj['user'].id,
-                )
+        return u'%s?assigned_to=%s' % (
+            reverse('helpdesk_list'),
+            obj['user'].id,
+            )
 
     def items(self, obj):
         if obj['queue']:
@@ -74,12 +71,11 @@ class OpenTicketsByUser(Feed):
                 ).filter(
                     Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
                 )
-        else:
-            return Ticket.objects.filter(
-                    assigned_to=obj['user']
-                ).filter(
-                    Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
-                )
+        return Ticket.objects.filter(
+                assigned_to=obj['user']
+            ).filter(
+                Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
+            )
 
     def item_pubdate(self, item):
         return item.created
@@ -87,8 +83,7 @@ class OpenTicketsByUser(Feed):
     def item_author_name(self, item):
         if item.assigned_to:
             return item.assigned_to.username
-        else:
-            return _('Unassigned')
+        return _('Unassigned')
 
 
 class UnassignedTickets(Feed):
@@ -113,8 +108,7 @@ class UnassignedTickets(Feed):
     def item_author_name(self, item):
         if item.assigned_to:
             return item.assigned_to.username
-        else:
-            return _('Unassigned')
+        return _('Unassigned')
 
 
 class RecentFollowUps(Feed):
@@ -165,5 +159,4 @@ class OpenTicketsByQueue(Feed):
     def item_author_name(self, item):
         if item.assigned_to:
             return item.assigned_to.username
-        else:
-            return _('Unassigned')
+        return _('Unassigned')

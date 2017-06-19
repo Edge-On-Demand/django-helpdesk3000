@@ -111,8 +111,7 @@ class API:
         if form.is_valid():
             ticket = form.save(user=self.request.user)
             return api_return(STATUS_OK, "%s" % ticket.id)
-        else:
-            return api_return(STATUS_ERROR, text=form.errors.as_text())
+        return api_return(STATUS_ERROR, text=form.errors.as_text())
 
 
     def api_public_list_queues(self):

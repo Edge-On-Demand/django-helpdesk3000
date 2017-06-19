@@ -197,15 +197,13 @@ dashboard = staff_member_required(dashboard)
 
 def delete_ticket(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
-
     if request.method == 'GET':
         return render_to_response('helpdesk/delete_ticket.html',
             RequestContext(request, {
                 'ticket': ticket,
             }))
-    else:
-        ticket.delete()
-        return HttpResponseRedirect(reverse('helpdesk_home'))
+    ticket.delete()
+    return HttpResponseRedirect(reverse('helpdesk_home'))
 delete_ticket = staff_member_required(delete_ticket)
 
 def followup_edit(request, ticket_id, followup_id):
@@ -551,8 +549,7 @@ def return_to_ticket(user, helpdesk_settings, ticket):
 
     if user.is_staff or helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE:
         return HttpResponseRedirect(ticket.get_absolute_url())
-    else:
-        return HttpResponseRedirect(ticket.ticket_url)
+    return HttpResponseRedirect(ticket.ticket_url)
 
 
 def mass_update(request):
@@ -1226,14 +1223,12 @@ save_query = staff_member_required(save_query)
 
 def delete_saved_query(request, id): # pylint: disable=redefined-builtin
     query = get_object_or_404(SavedSearch, id=id, user=request.user)
-
     if request.method == 'POST':
         query.delete()
         return HttpResponseRedirect(reverse('helpdesk_list'))
-    else:
-        return render_to_response('helpdesk/confirm_delete_saved_query.html',
-            RequestContext(request, {
-                'query': query,
+    return render_to_response('helpdesk/confirm_delete_saved_query.html',
+        RequestContext(request, {
+            'query': query,
                 }))
 delete_saved_query = staff_member_required(delete_saved_query)
 
@@ -1292,11 +1287,10 @@ def email_ignore_del(request, id): # pylint: disable=redefined-builtin
     if request.method == 'POST':
         ignore.delete()
         return HttpResponseRedirect(reverse('helpdesk_email_ignore'))
-    else:
-        return render_to_response('helpdesk/email_ignore_del.html',
-            RequestContext(request, {
-                'ignore': ignore,
-            }))
+    return render_to_response('helpdesk/email_ignore_del.html',
+        RequestContext(request, {
+            'ignore': ignore,
+        }))
 email_ignore_del = superuser_required(email_ignore_del)
 
 def ticket_cc(request, ticket_id):

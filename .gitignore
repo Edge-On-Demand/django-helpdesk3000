@@ -10,3 +10,5 @@ docs/doctrees/*
 .env*
 *.egg-info
 /.tox/
+*.geany
+*.out

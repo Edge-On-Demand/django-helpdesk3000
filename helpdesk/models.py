@@ -217,8 +217,7 @@ class Queue(models.Model):
         """
         if not self.email_address:
             return u'NO QUEUE EMAIL ADDRESS DEFINED <%s>' % settings.DEFAULT_FROM_EMAIL
-        else:
-            return u'%s <%s>' % (self.title, self.email_address)
+        return u'%s <%s>' % (self.title, self.email_address)
     from_address = property(_from_address)
 
     def save(self, *args, **kwargs):
@@ -373,8 +372,7 @@ class Ticket(models.Model):
         else:
             if self.assigned_to.get_full_name():
                 return self.assigned_to.get_full_name()
-            else:
-                return self.assigned_to.username
+            return self.assigned_to.username
     get_assigned_to = property(_get_assigned_to)
 
     def _get_ticket(self):
@@ -1015,8 +1013,7 @@ class KBItem(models.Model):
     def _score(self):
         if self.votes > 0:
             return int(self.recommendations / self.votes)
-        else:
-            return _('Unrated')
+        return _('Unrated')
     score = property(_score)
 
     def __unicode__(self):
@@ -1069,8 +1066,7 @@ class SavedSearch(models.Model):
     def __unicode__(self):
         if self.shared:
             return u'%s (*)' % self.title
-        else:
-            return u'%s' % self.title
+        return u'%s' % self.title
 
 class UserSettings(models.Model):
     """
@@ -1266,15 +1262,13 @@ class TicketCC(models.Model):
     def _email_address(self):
         if self.user and self.user.email is not None:
             return self.user.email
-        else:
-            return self.email
+        return self.email
     email_address = property(_email_address)
 
     def _display(self):
         if self.user:
             return self.user
-        else:
-            return self.email
+        return self.email
     display = property(_display)
 
     def __unicode__(self):

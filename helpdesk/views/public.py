@@ -30,8 +30,7 @@ def homepage(request):
         try:
             if getattr(request.user.usersettings.settings, 'login_view_ticketlist', False):
                 return HttpResponseRedirect(reverse('helpdesk_list'))
-            else:
-                return HttpResponseRedirect(reverse('helpdesk_dashboard'))
+            return HttpResponseRedirect(reverse('helpdesk_dashboard'))
         except UserSettings.DoesNotExist:
             return HttpResponseRedirect(reverse('helpdesk_dashboard'))
 
@@ -42,13 +41,11 @@ def homepage(request):
             if text_is_spam(form.cleaned_data['body'], request):
                 # This submission is spam. Let's not save it.
                 return render_to_response('helpdesk/public_spam.html', RequestContext(request, {}))
-            else:
-                ticket = form.save()
-                return HttpResponseRedirect('%s?ticket=%s&email=%s'% (
-                    reverse('helpdesk_public_view'),
-                    ticket.ticket_for_url,
-                    ticket.submitter_email)
-                    )
+            ticket = form.save()
+            return HttpResponseRedirect('%s?ticket=%s&email=%s'% (
+                reverse('helpdesk_public_view'),
+                ticket.ticket_for_url,
+                ticket.submitter_email))
     else:
         try:
             queue = Queue.objects.get(slug=request.GET.get('queue', None))
