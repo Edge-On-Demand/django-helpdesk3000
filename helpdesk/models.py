@@ -1250,12 +1250,14 @@ class TicketCC(models.Model):
     can_view = models.BooleanField(
         _('Can View Ticket?'),
         blank=True,
+        default=False,
         help_text=_('Can this CC login to view the ticket details?'),
         )
 
     can_update = models.BooleanField(
         _('Can Update Ticket?'),
         blank=True,
+        default=False,
         help_text=_('Can this CC login and update the ticket?'),
         )
 
@@ -1341,6 +1343,7 @@ class CustomField(models.Model):
         
     empty_selection_list = models.BooleanField(
         _('Add empty first choice to List?'),
+        default=False,
         help_text=_('Only for List: adds an empty first entry to the choices '\
             'list, which enforces that the user makes an active choice.'),
         )        
@@ -1373,11 +1376,13 @@ class CustomField(models.Model):
 
     required = models.BooleanField(
         _('Required?'),
+        default=False,
         help_text=_('Does the user have to enter a value for this field?'),
         )
 
     staff_only = models.BooleanField(
         _('Staff Only?'),
+        default=False,
         help_text=_('If this is ticked, then the public submission form '\
             'will NOT show this field'),
         )
