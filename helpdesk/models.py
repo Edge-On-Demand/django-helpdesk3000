@@ -1143,7 +1143,7 @@ def create_usersettings(sender, created_models=None, instance=None, created=Fals
                 s = qs(user=u, settings=DEFAULT_USER_SETTINGS)
                 s.save()
 
-models.signals.post_syncdb.connect(create_usersettings)
+#models.signals.post_syncdb.connect(create_usersettings)
 models.signals.post_save.connect(create_usersettings, sender=User)
 
 class IgnoreEmail(models.Model):
@@ -1294,7 +1294,7 @@ class CustomField(models.Model):
 
     label = models.CharField(
         _('Label'),
-        max_length='30',
+        max_length=30,
         help_text=_('The display label for this field'),
         )
 

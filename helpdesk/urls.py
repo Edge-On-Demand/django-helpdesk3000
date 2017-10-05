@@ -8,16 +8,14 @@ urls.py - Mapping of URL's to our various views. Note we always used NAMED
 """
 
 from django.conf import settings
-#if django.get_version().startswith("1.3"):
-try:
-    from django.conf.urls.defaults import patterns, url
-except ImportError:
-    from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
+import django.contrib.auth.views
 
 from helpdesk import settings as helpdesk_settings
-from helpdesk.views import feeds
+from helpdesk.views import feeds, staff, public, kb
+import helpdesk.views.api
 
 class DirectTemplateView(TemplateView):
     extra_context = None
@@ -31,145 +29,142 @@ class DirectTemplateView(TemplateView):
                     context[key] = value
         return context
 
-urlpatterns = patterns('helpdesk.views.staff',
+urlpatterns = [
+#'helpdesk.views.staff',
     url(r'^dashboard/$',
-        'dashboard',
+        staff.dashboard,
         name='helpdesk_dashboard'),
 
     url(r'^tickets/$',
-        'ticket_list',
+        staff.ticket_list,
         name='helpdesk_list'),
 
     url(r'^tickets/update/$',
-        'mass_update',
+        staff.mass_update,
         name='helpdesk_mass_update'),
 
     url(r'^tickets/submit/$',
-        'create_ticket',
+        staff.create_ticket,
         name='helpdesk_submit'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/$',
-        'view_ticket',
+        staff.view_ticket,
         name='helpdesk_view'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_edit'\
-        '/(?P<followup_id>[0-9]+)/$',
-        'followup_edit',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_edit/(?P<followup_id>[0-9]+)/$',
+        staff.followup_edit,
         name='helpdesk_followup_edit'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_delete'\
-        '/(?P<followup_id>[0-9]+)/$',
-        'followup_delete',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/followup_delete/(?P<followup_id>[0-9]+)/$',
+        staff.followup_delete,
         name='helpdesk_followup_delete'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/edit/$',
-        'edit_ticket',
+        staff.edit_ticket,
         name='helpdesk_edit'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/update/$',
-        'update_ticket',
+        staff.update_ticket,
         name='helpdesk_update'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/delete/$',
-        'delete_ticket',
+        staff.delete_ticket,
         name='helpdesk_delete'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/hold/$',
-        'hold_ticket',
+        staff.hold_ticket,
         name='helpdesk_hold'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/unhold/$',
-        'unhold_ticket',
+        staff.unhold_ticket,
         name='helpdesk_unhold'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/cc/$',
-        'ticket_cc',
+        staff.ticket_cc,
         name='helpdesk_ticket_cc'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/cc/add/$',
-        'ticket_cc_add',
+        staff.ticket_cc_add,
         name='helpdesk_ticket_cc_add'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/cc/delete/(?P<cc_id>[0-9]+)/$',
-        'ticket_cc_del',
+        staff.ticket_cc_del,
         name='helpdesk_ticket_cc_del'),
 
     url(r'^tickets/(?P<ticket_id>[0-9]+)/dependency/add/$',
-        'ticket_dependency_add',
+        staff.ticket_dependency_add,
         name='helpdesk_ticket_dependency_add'),
 
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/dependency/delete'\
-        '/(?P<dependency_id>[0-9]+)/$',
-        'ticket_dependency_del',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/dependency/delete/(?P<dependency_id>[0-9]+)/$',
+        staff.ticket_dependency_del,
         name='helpdesk_ticket_dependency_del'),
         
-    url(r'^tickets/(?P<ticket_id>[0-9]+)/attachment_delete'\
-        '/(?P<attachment_id>[0-9]+)/$',
-        'attachment_del',
+    url(r'^tickets/(?P<ticket_id>[0-9]+)/attachment_delete/(?P<attachment_id>[0-9]+)/$',
+        staff.attachment_del,
         name='helpdesk_attachment_del'),
 
     url(r'^raw/(?P<type>\w+)/$',
-        'raw_details',
+        staff.raw_details,
         name='helpdesk_raw'),
 
     url(r'^rss/$',
-        'rss_list',
+        staff.rss_list,
         name='helpdesk_rss_index'),
 
     url(r'^reports/$',
-        'report_index',
+        staff.report_index,
         name='helpdesk_report_index'),
 
     url(r'^reports/(?P<report>\w+)/$',
-        'run_report',
+        staff.run_report,
         name='helpdesk_run_report'),
 
     url(r'^save_query/$',
-        'save_query',
+        staff.save_query,
         name='helpdesk_savequery'),
 
     url(r'^delete_query/(?P<id>[0-9]+)/$',
-        'delete_saved_query',
+        staff.delete_saved_query,
         name='helpdesk_delete_query'),
 
     url(r'^settings/$',
-        'user_settings',
+        staff.user_settings,
         name='helpdesk_user_settings'),
 
     url(r'^ignore/$',
-        'email_ignore',
+        staff.email_ignore,
         name='helpdesk_email_ignore'),
 
     url(r'^ignore/add/$',
-        'email_ignore_add',
+        staff.email_ignore_add,
         name='helpdesk_email_ignore_add'),
 
     url(r'^ignore/delete/(?P<id>[0-9]+)/$',
-        'email_ignore_del',
+        staff.email_ignore_del,
         name='helpdesk_email_ignore_del'),
-)
+]
 
-urlpatterns += patterns('helpdesk.views.public',
+urlpatterns += [
+#'helpdesk.views.public',
     url(r'^$',
-        'homepage',
+        public.homepage,
         name='helpdesk_home'),
 
     url(r'^view/$',
-        'view_ticket',
+        public.view_ticket,
         name='helpdesk_public_view'),
 
     url(r'^change_language/$',
-        'change_language',
+        public.change_language,
         name='helpdesk_public_change_language'),        
-)
+]
 
-urlpatterns += patterns('',
+urlpatterns += [
     url(r'^rss/user/(?P<user_name>[\.A-Za-z0-9_\-\@]+)/$',
         login_required(feeds.OpenTicketsByUser()),
         name='helpdesk_rss_user'),
     
-    url(r'^rss/user/(?P<user_name>[\.A-Za-z0-9_\-\@]+)'\
-        '/(?P<queue_slug>[A-Za-z0-9_-]+)/$',
+    url(r'^rss/user/(?P<user_name>[\.A-Za-z0-9_\-\@]+)/(?P<queue_slug>[A-Za-z0-9_-]+)/$',
         login_required(feeds.OpenTicketsByUser()),
         name='helpdesk_rss_user_queue'),
     
@@ -183,46 +178,46 @@ urlpatterns += patterns('',
     
     url(r'^rss/recent_activity/$',
         login_required(feeds.RecentFollowUps()),
-        name='helpdesk_rss_activity'),
-    
-)
+        name='helpdesk_rss_activity'),   
+]
 
 
-urlpatterns += patterns('',
+urlpatterns += [
     url(r'^api/(?P<method>[a-z_-]+)/$',
-        'helpdesk.views.api.api',
+        helpdesk.views.api.api,
         name='helpdesk_api'),
 
     url(r'^login/$',
-        'django.contrib.auth.views.login',
+        django.contrib.auth.views.login,
         {'template_name': 'helpdesk/registration/login.html'},
         name='login'),
 
     url(r'^logout/$',
-        'django.contrib.auth.views.logout',
+        django.contrib.auth.views.logout,
         {
             'template_name': 'helpdesk/registration/login.html',
             'next_page': '../'
         },
         name='logout'),
-)
+]
 
 if helpdesk_settings.HELPDESK_KB_ENABLED:
-    urlpatterns += patterns('helpdesk.views.kb',
+    urlpatterns += [
+    #'helpdesk.views.kb',
         url(r'^kb/$',
-            'index', name='helpdesk_kb_index'),
+            kb.index, name='helpdesk_kb_index'),
         
         url(r'^kb/(?P<item>[0-9]+)/$',
-            'item', name='helpdesk_kb_item'),
+            kb.item, name='helpdesk_kb_item'),
 
         url(r'^kb/(?P<item>[0-9]+)/vote/$',
-            'vote', name='helpdesk_kb_vote'),
+            kb.vote, name='helpdesk_kb_vote'),
 
         url(r'^kb/(?P<slug>[A-Za-z0-9_-]+)/$',
-            'category', name='helpdesk_kb_category'),
-    )
+            kb.category, name='helpdesk_kb_category'),
+    ]
 
-urlpatterns += patterns('',
+urlpatterns += [
     url(r'^api/$',
         TemplateView.as_view(template_name='helpdesk/help_api.html'),
         name='helpdesk_api_help'),
@@ -238,4 +233,4 @@ urlpatterns += patterns('',
                     'ADMIN_URL': getattr(settings, 'ADMIN_URL', '/admin/')
                 }),
             name='helpdesk_system_settings'),
-)
+    ]
