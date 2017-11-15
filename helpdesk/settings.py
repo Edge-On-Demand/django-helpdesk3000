@@ -45,7 +45,7 @@ HELPDESK_KB_ENABLED_STAFF = getattr(
 # show extended navigation by default, to all users,
 # irrespective of staff status?
 HELPDESK_NAVIGATION_ENABLED = getattr(
-    settings, 'HELPDESK_NAVIGATION_ENABLED', False)
+    settings, 'HELPDESK_NAVIGATION_ENABLED', True)
 
 # show 'stats' link in navigation bar?
 HELPDESK_NAVIGATION_STATS_ENABLED = getattr(

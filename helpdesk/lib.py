@@ -5,7 +5,7 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 
 lib.py - Common functions (eg multipart e-mail)
 """
-
+import os
 try:
     from base64 import urlsafe_b64encode as b64encode # pylint: disable=unused-import
 except ImportError:
@@ -17,6 +17,7 @@ except ImportError:
 
 import logging
 
+from django.template import engines
 from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_str
 from django.contrib.sites.models import Site
@@ -58,8 +59,7 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
     from django.template import loader, Context
 
     from helpdesk.models import EmailTemplate
-    import os
-
+    
     context = Context(email_context)
 
     if hasattr(context['queue'], 'locale'):
@@ -73,13 +73,10 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
     try:
         t = EmailTemplate.objects.get(template_name__iexact=template_name, locale=locale)
     except EmailTemplate.DoesNotExist:
-        pass
-
-    if not t:
         try:
             t = EmailTemplate.objects.get(template_name__iexact=template_name, locale__isnull=True)
         except EmailTemplate.DoesNotExist:
-            logger.warning('template "%s" does not exist, no mail sent', template_name)
+            print('template "%s" does not exist, no mail sent' % template_name)
             return # just ignore if template doesn't exist
 
     if not sender:
@@ -87,9 +84,8 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
 
     footer_file = os.path.join('helpdesk', locale, 'email_text_footer.txt')
 
-    text_part = loader.get_template_from_string(
-        "%s{%% include '%s' %%}" % (t.plain_text, footer_file)
-        ).render(context)
+    #text_part = loader.get_template_from_string("%s{%% include '%s' %%}" % (t.plain_text, footer_file)).render(context)
+    text_part = engines['django'].from_string("%s{%% include '%s' %%}" % (t.plain_text, footer_file)).render(email_context)
 
     email_html_base_file = os.path.join('helpdesk', locale, 'email_html_base.html')
 
@@ -98,14 +94,12 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
         html_txt = html_txt.replace('\r\n', '<br>')
         context['comment'] = mark_safe(html_txt)
 
-    html_part = loader.get_template_from_string(
+    html_part = engines['django'].from_string(
         "{%% extends '%s' %%}{%% block title %%}%s{%% endblock %%}{%% block content %%}%s{%% endblock %%}" \
             % (email_html_base_file, t.heading, t.html)
-        ).render(context)
+        ).render(email_context)
 
-    subject_part = loader.get_template_from_string(
-        "{{ ticket.ticket }} {{ ticket.title|safe }} %s" % t.subject
-        ).render(context)
+    subject_part = engines['django'].from_string("{{ ticket.ticket }} {{ ticket.title|safe }} %s" % t.subject).render(email_context)
 
     if isinstance(recipients, (str, unicode)):
         if recipients.find(','):

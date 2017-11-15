@@ -17,7 +17,7 @@ import json
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 # from django.template import loader, Context
 from django.views.decorators.csrf import csrf_exempt
 
@@ -52,16 +52,13 @@ def api(request, method):
     """
 
     if method == 'help':
-        return render_to_response('helpdesk/help_api.html')
+        return render(request, 'helpdesk/help_api.html')
 
     if request.method != 'POST':
         return api_return(STATUS_ERROR_BADMETHOD)
 
     # TODO: Move away from having the username & password in every request.
-    request.user = authenticate(
-        username=request.POST.get('user', False),
-        password=request.POST.get('password'),
-        )
+    request.user = authenticate(username=request.POST.get('user', False), password=request.POST.get('password'))
 
     if request.user is None:
         return api_return(STATUS_ERROR_PERMISSIONS)

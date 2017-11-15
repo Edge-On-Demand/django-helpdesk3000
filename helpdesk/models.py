@@ -516,11 +516,8 @@ class Ticket(models.Model):
         )
 
         # Send status changes to the submitter.
-        if send_email and followup and followup.public \
-        and (
-            followup.comment or \
-            (self.status in (Ticket.RESOLVED_STATUS, Ticket.CLOSED_STATUS))):
-            
+        if send_email and followup and followup.public and (followup.comment or (self.status in (Ticket.RESOLVED_STATUS, Ticket.CLOSED_STATUS))):
+
             if self.status == Ticket.RESOLVED_STATUS:
                 template = 'resolved_'
             elif self.status == Ticket.CLOSED_STATUS:

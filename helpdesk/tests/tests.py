@@ -2,6 +2,7 @@ from __future__ import print_function
 
 # Make warnings throw explicit exceptions so we're forced to fix them.
 import warnings
+import logging
 
 from django.test import TestCase
 from django.core import mail
@@ -14,9 +15,15 @@ from helpdesk.models import Queue, CustomField, Ticket, User, EmailTemplate
 
 warnings.simplefilter('error', RuntimeWarning)
 
+logger = logging.getLogger('helpdesk')
+logger.setLevel(logging.DEBUG)
+
 class TicketBasicsTestCase(TestCase):
     
-    fixtures = ['test_data.json']
+    fixtures = [
+        'initial_data.json',
+        'test_data.json',
+    ]
     
     def setUp(self):
         
@@ -72,7 +79,7 @@ class TicketBasicsTestCase(TestCase):
         # Ensure we landed on the "View" page.
         self.assertEqual(
             last_redirect_url.split('?')[0],
-            'http://testserver%s' % reverse('helpdesk_public_view'))
+            reverse('helpdesk_public_view'))
             
         # Ensure submitter, new-queue + update-queue were all emailed.
 #        for email in mail.outbox:
@@ -151,7 +158,7 @@ class TicketBasicsTestCase(TestCase):
         # Ensure we landed on the "View" page.
         self.assertEqual(
             last_redirect_url.split('?')[0],
-            'http://testserver%s' % reverse('helpdesk_public_view'))
+            reverse('helpdesk_public_view'))
         # Ensure only two e-mails were sent - submitter & updated.
         self.assertEqual(email_count+2, len(mail.outbox))
         
@@ -210,7 +217,7 @@ class TicketBasicsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             last_redirect_url.split('?')[0],
-            'http://testserver%s' % reverse('helpdesk_view', args=(1,)))
+            reverse('helpdesk_view', args=(1,)))
 #            
 #        # Ensure submitter, new-queue + update-queue were all emailed.
         for email in mail.outbox:

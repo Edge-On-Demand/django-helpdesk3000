@@ -322,7 +322,7 @@ class TicketForm(forms.Form):
                 sender=q.from_address,
                 fail_silently=True,
                 files=files,
-                )
+            )
             messages_sent_to.append(t.submitter_email)
 
         if t.assigned_to and t.assigned_to != user \

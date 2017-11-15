@@ -1,5 +1,4 @@
 {% load i18n %}
-{% load url from future %}
 {% load saved_queries %}
 {% load load_helpdesk_settings %}
 {% with request|load_helpdesk_settings as helpdesk_settings %}
@@ -29,8 +28,8 @@
         $(document).ready(function(){
             // replace display while hovering over menu item
             $('li.headerlink').hover(
-	            function() { $('ul', this).css('display', 'block'); },
-	            function() { $('ul', this).css('display', 'none'); });
+                function() { $('ul', this).css('display', 'block'); },
+                function() { $('ul', this).css('display', 'none'); });
 
             {% if helpdesk_settings.HELPDESK_TRANSLATE_TICKET_COMMENTS %}
             // add translate functionality - google translate V1 is deprecated
@@ -106,8 +105,8 @@
 
             <div id='body'>
                 {% block helpdesk_body %}
-	                {% block helpdesk_inner %}
-	                {% endblock helpdesk_inner %}
+                    {% block helpdesk_inner %}
+                    {% endblock helpdesk_inner %}
                 {% endblock %}
             </div>
 

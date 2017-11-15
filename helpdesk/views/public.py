@@ -9,8 +9,8 @@ views/public.py - All public facing views, eg non-staff (no authentication
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
+#from django.template import RequestContext
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
@@ -40,7 +40,7 @@ def homepage(request):
         if form.is_valid():
             if text_is_spam(form.cleaned_data['body'], request):
                 # This submission is spam. Let's not save it.
-                return render_to_response('helpdesk/public_spam.html', RequestContext(request, {}))
+                return render(request, 'helpdesk/public_spam.html', {})
             ticket = form.save()
             return HttpResponseRedirect('%s?ticket=%s&email=%s'% (
                 reverse('helpdesk_public_view'),
@@ -66,13 +66,13 @@ def homepage(request):
     public_queues = Queue.objects.filter(allow_public_submission=True)
     show_submit_form = public_queues.count() and helpdesk_settings.HELPDESK_SUBMIT_A_TICKET_PUBLIC
 
-    return render_to_response('helpdesk/public_homepage.html',
-        RequestContext(request, dict(
+    return render(request, 'helpdesk/public_homepage.html',
+        dict(
             form=form,
             helpdesk_settings=helpdesk_settings,
             kb_categories=knowledgebase_categories,
             show_submit_form=show_submit_form,
-        )))
+        ))
 
 
 def view_ticket(request):
@@ -121,28 +121,26 @@ def view_ticket(request):
 
             # redirect user back to this ticket if possible.
             redirect_url = ''
-            if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED or 1:
+            if helpdesk_settings.HELPDESK_NAVIGATION_ENABLED:
                 redirect_url = reverse('helpdesk_view', args=[ticket_id])
 
-            return render_to_response('helpdesk/public_view_ticket.html',
-                RequestContext(request, {
+            return render(request, 'helpdesk/public_view_ticket.html',
+                {
                     'ticket': ticket,
                     'helpdesk_settings': helpdesk_settings,
                     'next': redirect_url,
-                }))
+                })
 
-    return render_to_response('helpdesk/public_view_form.html',
-        RequestContext(request, {
+    return render(request, 'helpdesk/public_view_form.html',
+        {
             'ticket': ticket,
             'email': email,
             'error_message': error_message,
             'helpdesk_settings': helpdesk_settings,
-        }))
+        })
 
 def change_language(request):
     return_to = ''
     if request.GET.has_key('return_to'):
         return_to = request.GET['return_to']
-
-    return render_to_response('helpdesk/public_change_language.html',
-        RequestContext(request, {'next': return_to}))
+    return render(request, 'helpdesk/public_change_language.html', {'next': return_to})
