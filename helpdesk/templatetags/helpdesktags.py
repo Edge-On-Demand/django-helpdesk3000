@@ -50,4 +50,4 @@ def sortable_column_link(request, name, sort_param, label=None, default=''):
         name=re.sub('^[^a-zA-Z#]+', '', label or name),
         arrow=arrow
     )
-    return '<a href="{url}">{name}{arrow}</a>'.format(**kwargs)
+    return mark_safe('<a href="{url}">{name}{arrow}</a>'.format(**kwargs))
