@@ -12,3 +12,5 @@ docs/doctrees/*
 /.tox/
 *.geany
 *.out
+.idea/
+.vscode/
