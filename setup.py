@@ -56,7 +56,9 @@ setup(
         'helpdesk': [
             'fixtures/*',
             'locale/*/*/*',
+            'static/*/*.*',
             'static/*/*/*.*',
+            'static/*/*/*/*.*',
             'templates/*.*',
             'templates/*/*.*',
             'templates/*/*/*.*',
