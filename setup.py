@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 from setuptools import setup, find_packages
+from pprint import pprint
 
 import helpdesk
 
@@ -25,6 +26,21 @@ def get_reqs(*fns):
                 continue
             lst.append(package.strip())
     return lst
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk('helpdesk/'+directory):
+        for filename in filenames:
+            paths.append(os.path.join(path.replace('helpdesk/', ''), filename))
+    return paths
+
+extra_files = []
+extra_files.extend(package_files('fixtures'))
+extra_files.extend(package_files('locale'))
+extra_files.extend(package_files('static'))
+extra_files.extend(package_files('templates'))
+extra_files.extend(package_files('tests/fixtures'))
+pprint(extra_files, indent=4)
 
 setup(
     name='django-helpdesk3000',
@@ -53,18 +69,19 @@ setup(
 #     include_package_data=True,
     package_data={
         '': ['docs/*'],
-        'helpdesk': [
-            'fixtures/*',
-            'locale/*/*/*',
-            'static/*/*.*',
-            'static/*/*/*.*',
-            'static/*/*/*/*.*',
-            'templates/*.*',
-            'templates/*/*.*',
-            'templates/*/*/*.*',
-            'templates/*/*/*/*.*',
-            'tests/fixtures/*',
-        ],
+        'helpdesk': extra_files,
+            # CS 2017-12-11 Had to remove due to bug https://bugs.python.org/issue19286 which still persists on some systems.
+            #'fixtures/*',
+            #'locale/*/*/*',
+            #'static/*/*.*',
+            #'static/*/*/*.*',
+            #'static/*/*/*/*.*',
+            #'templates/*.*',
+            #'templates/*/*.*',
+            #'templates/*/*/*.*',
+            #'templates/*/*/*/*.*',
+            #'tests/fixtures/*',
+        #],
     },
     zip_safe=False,
     install_requires=get_reqs('requirements-min-django.txt', 'requirements.txt'),
