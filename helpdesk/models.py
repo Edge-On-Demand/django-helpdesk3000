@@ -207,6 +207,7 @@ class Queue(models.Model):
         return u"%s" % self.title
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ('title',)
 
     def _from_address(self):
@@ -459,6 +460,7 @@ class Ticket(models.Model):
         tags = TagField(blank=True)
 
     class Meta:
+        app_label = 'helpdesk'
         get_latest_by = "created"
 
     def __unicode__(self):
@@ -675,6 +677,7 @@ class FollowUp(models.Model):
     objects = FollowUpManager()
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['date']
 
     def __unicode__(self):
@@ -717,6 +720,9 @@ class TicketChange(models.Model):
         blank=True,
         null=True,
         )
+
+    class Meta:
+        app_label = 'helpdesk'
 
     def __unicode__(self):
         s = u'%s ' % self.field
@@ -791,6 +797,7 @@ class Attachment(models.Model):
         return u'%s' % self.filename
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['filename',]
 
 
@@ -828,6 +835,7 @@ class PreSetReply(models.Model):
         )
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['name',]
         verbose_name_plural = 'pre set replies'
 
@@ -863,6 +871,9 @@ class EscalationExclusion(models.Model):
         _('Date'),
         help_text=_('Date on which escalation should not happen'),
         )
+
+    class Meta:
+        app_label = 'helpdesk'
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -923,6 +934,7 @@ class EmailTemplate(models.Model):
         return u'%s' % self.template_name
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['template_name', 'locale']
 
 
@@ -949,6 +961,7 @@ class KBCategory(models.Model):
         return u'%s' % self.title
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['title',]
         verbose_name = 'Knowledgebase category'
         verbose_name_plural = 'Knowledgebase categories'
@@ -1015,6 +1028,7 @@ class KBItem(models.Model):
         return u'%s' % self.title
 
     class Meta:
+        app_label = 'helpdesk'
         ordering = ['title',]
         verbose_name = 'Knowledgebase item'
         verbose_name_plural = 'Knowledgebase items'
@@ -1058,6 +1072,9 @@ class SavedSearch(models.Model):
         help_text=_('Pickled query object. Be wary changing this.'),
         )
 
+    class Meta:
+        app_label = 'helpdesk'
+
     def __unicode__(self):
         if self.shared:
             return u'%s (*)' % self.title
@@ -1100,6 +1117,7 @@ class UserSettings(models.Model):
         return u'Preferences for %s' % self.user
 
     class Meta:
+        app_label = 'helpdesk'
         verbose_name = _('User Settings')
         verbose_name_plural = _('User Settings')
 
@@ -1183,6 +1201,9 @@ class IgnoreEmail(models.Model):
             'be deleted.'),
         )
 
+    class Meta:
+        app_label = 'helpdesk'
+
     def __unicode__(self):
         return u'%s' % self.name
 
@@ -1254,6 +1275,9 @@ class TicketCC(models.Model):
         default=False,
         help_text=_('Can this CC login and update the ticket?'),
         )
+
+    class Meta:
+        app_label = 'helpdesk'
 
     def _email_address(self):
         if self.user and self.user.email is not None:
@@ -1383,6 +1407,9 @@ class CustomField(models.Model):
 
     objects = CustomFieldManager()
 
+    class Meta:
+        app_label = 'helpdesk'
+
     def __unicode__(self):
         return '%s' % (self.name)
 
@@ -1404,6 +1431,7 @@ class TicketCustomFieldValue(models.Model):
         return '%s / %s' % (self.ticket, self.field)
 
     class Meta:
+        app_label = 'helpdesk'
         unique_together = ('ticket', 'field'),
 
 
@@ -1430,4 +1458,5 @@ class TicketDependency(models.Model):
         return '%s / %s' % (self.ticket, self.depends_on)
 
     class Meta:
+        app_label = 'helpdesk'
         unique_together = ('ticket', 'depends_on')

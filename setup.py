@@ -1,8 +1,9 @@
 from __future__ import print_function
 
 import os
-from setuptools import setup, find_packages
 from pprint import pprint
+
+from setuptools import setup, find_packages
 
 import helpdesk
 
