@@ -6,31 +6,34 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 urls.py - Mapping of URL's to our various views. Note we always used NAMED
           views for simplicity in linking later on.
 """
+import collections
 
+import django.contrib.auth.views
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
-import django.contrib.auth.views
 
+import helpdesk.views.api
 from helpdesk import settings as helpdesk_settings
 from helpdesk.views import feeds, staff, public, kb
-import helpdesk.views.api
+
 
 class DirectTemplateView(TemplateView):
     extra_context = None
+
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
         if self.extra_context is not None:
-            for key, value in self.extra_context.items():
-                if callable(value):
+            for key, value in list(self.extra_context.items()):
+                if isinstance(value, collections.Callable):
                     context[key] = value()
                 else:
                     context[key] = value
         return context
 
+
 urlpatterns = [
-#'helpdesk.views.staff',
     url(r'^dashboard/$',
         staff.dashboard,
         name='helpdesk_dashboard'),
@@ -141,11 +144,10 @@ urlpatterns = [
 
     url(r'^ignore/delete/(?P<id>[0-9]+)/$',
         staff.email_ignore_del,
-        name='helpdesk_email_ignore_del'),
+        name='helpdesk_email_ignore_del')
 ]
 
 urlpatterns += [
-#'helpdesk.views.public',
     url(r'^$',
         public.homepage,
         name='helpdesk_home'),
@@ -156,7 +158,7 @@ urlpatterns += [
 
     url(r'^change_language/$',
         public.change_language,
-        name='helpdesk_public_change_language'),        
+        name='helpdesk_public_change_language')
 ]
 
 urlpatterns += [
@@ -178,7 +180,7 @@ urlpatterns += [
     
     url(r'^rss/recent_activity/$',
         login_required(feeds.RecentFollowUps()),
-        name='helpdesk_rss_activity'),   
+        name='helpdesk_rss_activity')
 ]
 
 
@@ -198,12 +200,11 @@ urlpatterns += [
             'template_name': 'helpdesk/registration/login.html',
             'next_page': '../'
         },
-        name='logout'),
+        name='logout')
 ]
 
 if helpdesk_settings.HELPDESK_KB_ENABLED:
     urlpatterns += [
-    #'helpdesk.views.kb',
         url(r'^kb/$',
             kb.index, name='helpdesk_kb_index'),
         
@@ -232,5 +233,5 @@ urlpatterns += [
                 extra_context={
                     'ADMIN_URL': getattr(settings, 'ADMIN_URL', '/admin/')
                 }),
-            name='helpdesk_system_settings'),
+            name='helpdesk_system_settings')
     ]

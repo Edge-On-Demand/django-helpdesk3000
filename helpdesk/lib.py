@@ -5,29 +5,39 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 
 lib.py - Common functions (eg multipart e-mail)
 """
-import os
-try:
-    from base64 import urlsafe_b64encode as b64encode # pylint: disable=unused-import
-except ImportError:
-    from base64 import encodestring as b64encode # pylint: disable=unused-import
-try:
-    from base64 import urlsafe_b64decode as b64decode # pylint: disable=unused-import
-except ImportError:
-    from base64 import decodestring as b64decode # pylint: disable=unused-import
+from __future__ import print_function
 
 import logging
+import os
 
-from django.template import engines
-from django.utils.safestring import mark_safe
-from django.utils.encoding import smart_str
-from django.contrib.sites.models import Site
+import collections
+
+try:
+    from base64 import urlsafe_b64encode as b64encode
+except ImportError:
+    from base64 import encodestring as b64encode
+try:
+    from base64 import urlsafe_b64decode as b64decode
+except ImportError:
+    from base64 import decodestring as b64decode
+
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.contrib.sites.models import Site
+from django.template import Context, engines
+from django.utils.encoding import smart_str
+from django.utils.safestring import mark_safe
+
+from helpdesk.models import EmailTemplate
 
 logger = logging.getLogger('helpdesk')
 
 chart_colours = ('80C65A', '990066', 'FF9900', '3399CC', 'BBCCED', '3399CC', 'FFCC33')
 
-def send_templated_mail(template_name, email_context, recipients, sender=None, bcc=None, fail_silently=False, files=None):
+
+def send_templated_mail(
+        template_name, email_context, recipients, sender=None, bcc=None,
+        fail_silently=False, files=None):
     """
     send_templated_mail() is a warpper around Django's e-mail routines that
     allows us to easily send multipart (text/plain & text/html) e-mails using
@@ -54,12 +64,6 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
         eg ('/tmp/file1.txt', '/tmp/image.png')
 
     """
-    from django.conf import settings
-    from django.core.mail import EmailMultiAlternatives
-    from django.template import loader, Context
-
-    from helpdesk.models import EmailTemplate
-    
     context = Context(email_context)
 
     if hasattr(context['queue'], 'locale'):
@@ -77,31 +81,32 @@ def send_templated_mail(template_name, email_context, recipients, sender=None, b
             t = EmailTemplate.objects.get(template_name__iexact=template_name, locale__isnull=True)
         except EmailTemplate.DoesNotExist:
             print('template "%s" does not exist, no mail sent' % template_name)
-            return # just ignore if template doesn't exist
+            return  # just ignore if template doesn't exist
 
     if not sender:
         sender = settings.DEFAULT_FROM_EMAIL
 
     footer_file = os.path.join('helpdesk', locale, 'email_text_footer.txt')
 
-    #text_part = loader.get_template_from_string("%s{%% include '%s' %%}" % (t.plain_text, footer_file)).render(context)
-    text_part = engines['django'].from_string("%s{%% include '%s' %%}" % (t.plain_text, footer_file)).render(email_context)
+    text_part = engines['django'].from_string(
+        "%s{%% include '%s' %%}" % (t.plain_text, footer_file)).render(email_context)
 
     email_html_base_file = os.path.join('helpdesk', locale, 'email_html_base.html')
 
-    if context.has_key('comment') and context['comment']:
+    if 'comment' in context and context['comment']:
         html_txt = context['comment']
         html_txt = html_txt.replace('\r\n', '<br>')
         context['comment'] = mark_safe(html_txt)
 
     html_part = engines['django'].from_string(
-        "{%% extends '%s' %%}{%% block title %%}%s{%% endblock %%}{%% block content %%}%s{%% endblock %%}" \
-            % (email_html_base_file, t.heading, t.html)
+        "{%% extends '%s' %%}{%% block title %%}%s{%% endblock %%}{%% block content %%}%s{%% endblock %%}" % (
+            email_html_base_file, t.heading, t.html)
         ).render(email_context)
 
-    subject_part = engines['django'].from_string("{{ ticket.ticket }} {{ ticket.title|safe }} %s" % t.subject).render(email_context)
+    subject_part = engines['django'].from_string(
+        "{{ ticket.ticket }} {{ ticket.title|safe }} %s" % t.subject).render(email_context)
 
-    if isinstance(recipients, (str, unicode)):
+    if isinstance(recipients, str):
         if recipients.find(','):
             recipients = recipients.split(',')
     elif not isinstance(recipients, list):
@@ -132,7 +137,6 @@ def query_to_dict(results, descriptions):
     Converts the results of a raw SQL query into a list of dictionaries, suitable
     for use in templates etc.
     """
-
     output = []
     for data in results:
         row = {}
@@ -159,7 +163,7 @@ def apply_query(queryset, params):
             set of Q() objects.
         sorting: The name of the column to sort by
     """
-    for key in params['filtering'].keys():
+    for key in list(params['filtering'].keys()):
         kwargs = {key: params['filtering'][key]}
         queryset = queryset.filter(**kwargs)
 
@@ -191,16 +195,15 @@ def safe_template_context(ticket):
     The downside to this is that if we make changes to the model, we will also
     have to update this code. Perhaps we can find a better way in the future.
     """
-
     context = {
         'queue': {},
-        'ticket': {},
-        }
+        'ticket': {}
+    }
     queue = ticket.queue
 
     for field in ('title', 'slug', 'email_address', 'from_address', 'locale'):
         attr = getattr(queue, field, None)
-        if callable(attr):
+        if isinstance(attr, collections.Callable):
             context['queue'][field] = attr()
         else:
             context['queue'][field] = attr
@@ -213,7 +216,7 @@ def safe_template_context(ticket):
         'get_status', 'ticket_url', 'staff_url', '_get_assigned_to'
     ):
         attr = getattr(ticket, field, None)
-        if callable(attr):
+        if isinstance(attr, collections.Callable):
             context['ticket'][field] = '%s' % attr()
         else:
             context['ticket'][field] = attr
@@ -241,7 +244,7 @@ def text_is_spam(text, request):
 
     ak = Akismet(
         blog_url='http://%s/' % site.domain,
-        agent='django-helpdesk',
+        agent='django-helpdesk'
     )
 
     if hasattr(settings, 'TYPEPAD_ANTISPAM_API_KEY'):
@@ -258,7 +261,7 @@ def text_is_spam(text, request):
             'user_agent': request.META.get('HTTP_USER_AGENT', ''),
             'referrer': request.META.get('HTTP_REFERER', ''),
             'comment_type': 'comment',
-            'comment_author': '',
+            'comment_author': ''
         }
 
         return ak.comment_check(smart_str(text), data=ak_data)

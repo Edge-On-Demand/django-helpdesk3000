@@ -9,6 +9,7 @@ scripts/get_email.py - Designed to be run from cron, this script checks the
                        helpdesk, creating tickets from the new messages (or
                        adding to existing tickets if needed)
 """
+from __future__ import print_function
 
 import imaplib
 import mimetypes
@@ -43,7 +44,8 @@ class Command(BaseCommand):
                 help='Hide details about each queue/message as they are processed'),
             )
 
-    help = 'Process Jutda Helpdesk queues and process e-mails via POP3/IMAP as required, feeding them into the helpdesk.'
+    help = 'Process Jutda Helpdesk queues and process e-mails via POP3/IMAP as required, ' \
+           'feeding them into the helpdesk.'
 
     def handle(self, *args, **options):
         quiet = options.get('quiet', False)
@@ -75,7 +77,7 @@ def process_email(quiet=False):
 
 def process_queue(q, quiet=False):
     if not quiet:
-        print "Processing: %s" % q
+        print("Processing: %s" % q)
 
     email_box_type = settings.QUEUE_EMAIL_BOX_TYPE if settings.QUEUE_EMAIL_BOX_TYPE else q.email_box_type
 
@@ -138,11 +140,13 @@ def decodeUnknown(charset, string):
             return string.decode('utf-8', 'ignore')
         except UnicodeDecodeError:
             return string.decode('iso8859-1', 'ignore')
-    return unicode(string, charset)
+    return str(string, charset)
+
 
 def decode_mail_headers(string):
     decoded = decode_header(string)
-    return u' '.join([unicode(msg, charset or 'utf-8') for msg, charset in decoded])
+    return ' '.join([str(msg, charset or 'utf-8') for msg, charset in decoded])
+
 
 def ticket_from_message(message, queue, quiet):
     # 'message' must be an RFC822 formatted message.
@@ -150,7 +154,8 @@ def ticket_from_message(message, queue, quiet):
     message = email.message_from_string(msg)
     subject = message.get('subject', _('Created from e-mail'))
     subject = decode_mail_headers(decodeUnknown(message.get_charset(), subject))
-    subject = subject.replace("Re: ", "").replace("Fw: ", "").replace("RE: ", "").replace("FW: ", "").replace("Automatic reply: ", "").strip()
+    subject = subject.replace("Re: ", "").replace("Fw: ", "").replace("RE: ", "").replace(
+        "FW: ", "").replace("Automatic reply: ", "").strip()
 
     sender = message.get('from', _('Unknown Sender'))
     sender = decode_mail_headers(decodeUnknown(message.get_charset(), sender))
@@ -266,7 +271,7 @@ def ticket_from_message(message, queue, quiet):
     f.save()
 
     if not quiet:
-        print (" [%s-%s] %s" % (t.queue.slug, t.id, t.title,)).encode('ascii', 'replace')
+        print((" [%s-%s] %s" % (t.queue.slug, t.id, t.title,)).encode('ascii', 'replace'))
 
     for fileObj in files:
         if fileObj['content']:
@@ -281,13 +286,12 @@ def ticket_from_message(message, queue, quiet):
             a.file.save(filename, ContentFile(fileObj['content']), save=False)
             a.save()
             if not quiet:
-                print "    - %s" % filename
+                print("    - %s" % filename)
 
 
     context = safe_template_context(t)
 
     if new:
-
         if sender_email:
             send_templated_mail(
                 'newticket_submitter',

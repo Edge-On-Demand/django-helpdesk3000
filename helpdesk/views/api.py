@@ -10,21 +10,14 @@ The API documentation can be accessed by visiting http://helpdesk/api/help/
 (obviously, substitute helpdesk for your django-helpdesk URI), or by reading
 through templates/helpdesk/help_api.html.
 """
-
 import json
 
-# from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render
-# from django.template import loader, Context
 from django.views.decorators.csrf import csrf_exempt
-
-try:
-    from django.utils import timezone
-except ImportError:
-    from datetime import datetime as timezone
+from django.utils import timezone
 
 from helpdesk.forms import TicketForm
 from helpdesk.lib import send_templated_mail, safe_template_context
@@ -50,7 +43,6 @@ def api(request, method):
         * The method must match one of the public methods of the API class.
 
     """
-
     if method == 'help':
         return render(request, 'helpdesk/help_api.html')
 
@@ -58,7 +50,8 @@ def api(request, method):
         return api_return(STATUS_ERROR_BADMETHOD)
 
     # TODO: Move away from having the username & password in every request.
-    request.user = authenticate(username=request.POST.get('user', False), password=request.POST.get('password'))
+    request.user = authenticate(username=request.POST.get(
+        'user', False), password=request.POST.get('password'))
 
     if request.user is None:
         return api_return(STATUS_ERROR_PERMISSIONS)
@@ -99,17 +92,16 @@ class API:
     def __init__(self, request):
         self.request = request
 
-
     def api_public_create_ticket(self):
         form = TicketForm(self.request.POST)
         form.fields['queue'].choices = [[q.id, q.title] for q in Queue.objects.all()]
-        form.fields['assigned_to'].choices = [[u.id, u.username] for u in User.objects.filter(is_active=True)]
+        form.fields['assigned_to'].choices = [
+            [u.id, u.username] for u in User.objects.filter(is_active=True)]
 
         if form.is_valid():
             ticket = form.save(user=self.request.user)
             return api_return(STATUS_OK, "%s" % ticket.id)
         return api_return(STATUS_ERROR, text=form.errors.as_text())
-
 
     def api_public_list_queues(self):
         return api_return(
@@ -118,7 +110,6 @@ class API:
                 {"id": "%s" % q.id, "title": "%s" % q.title}
                 for q in Queue.objects.all()
             ]), json=True)
-
 
     def api_public_find_user(self):
         username = self.request.POST.get('username', False)
@@ -129,7 +120,6 @@ class API:
 
         except User.DoesNotExist:
             return api_return(STATUS_ERROR, "Invalid username provided")
-
 
     def api_public_delete_ticket(self):
         if not self.request.POST.get('confirm', False):
@@ -144,7 +134,6 @@ class API:
 
         return api_return(STATUS_OK)
 
-
     def api_public_hold_ticket(self):
         try:
             ticket = Ticket.objects.get(id=self.request.POST.get('ticket', False))
@@ -156,7 +145,6 @@ class API:
 
         return api_return(STATUS_OK)
 
-
     def api_public_unhold_ticket(self):
         try:
             ticket = Ticket.objects.get(id=self.request.POST.get('ticket', False))
@@ -167,7 +155,6 @@ class API:
         ticket.save()
 
         return api_return(STATUS_OK)
-
 
     def api_public_add_followup(self):
         try:
@@ -235,8 +222,8 @@ class API:
             messages_sent_to.append(ticket.queue.updated_ticket_cc)
 
         if ticket.assigned_to and self.request.user != ticket.assigned_to \
-        and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
-        and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
+                and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
+                and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
             send_templated_mail(
                 'updated_owner',
                 context,
@@ -248,7 +235,6 @@ class API:
         ticket.save()
 
         return api_return(STATUS_OK)
-
 
     def api_public_resolve(self):
         try:
@@ -310,8 +296,8 @@ class API:
             messages_sent_to.append(ticket.queue.updated_ticket_cc)
 
         if ticket.assigned_to and self.request.user != ticket.assigned_to \
-        and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
-        and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
+                and getattr(ticket.assigned_to.usersettings.settings, 'email_on_ticket_apichange', False) \
+                and ticket.assigned_to.email and ticket.assigned_to.email not in messages_sent_to:
             send_templated_mail(
                 'resolved_resolved',
                 context,

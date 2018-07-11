@@ -6,7 +6,6 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 views/feeds.py - A handful of staff-only RSS feeds to provide ticket details
                  to feed readers or similar software.
 """
-
 from django.contrib.auth.models import User
 from django.contrib.syndication.views import Feed
 from django.core.urlresolvers import reverse
@@ -35,47 +34,47 @@ class OpenTicketsByUser(Feed):
             return _("Helpdesk: Open Tickets in queue %(queue)s for %(username)s") % {
                 'queue': obj['queue'].title,
                 'username': obj['user'].username,
-                }
+            }
         return _("Helpdesk: Open Tickets for %(username)s") % {
             'username': obj['user'].username,
-            }
+        }
 
     def description(self, obj):
         if obj['queue']:
             return _("Open and Reopened Tickets in queue %(queue)s for %(username)s") % {
                 'queue': obj['queue'].title,
                 'username': obj['user'].username,
-                }
+            }
         return _("Open and Reopened Tickets for %(username)s") % {
             'username': obj['user'].username,
-            }
+        }
 
     def link(self, obj):
         if obj['queue']:
-            return u'%s?assigned_to=%s&queue=%s' % (
+            return '%s?assigned_to=%s&queue=%s' % (
                 reverse('helpdesk_list'),
                 obj['user'].id,
                 obj['queue'].id,
-                )
-        return u'%s?assigned_to=%s' % (
+            )
+        return '%s?assigned_to=%s' % (
             reverse('helpdesk_list'),
             obj['user'].id,
-            )
+        )
 
     def items(self, obj):
         if obj['queue']:
             return Ticket.objects.filter(
-                    assigned_to=obj['user']
-                ).filter(
-                    queue=obj['queue']
-                ).filter(
-                    Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
-                )
-        return Ticket.objects.filter(
                 assigned_to=obj['user']
+            ).filter(
+                queue=obj['queue']
             ).filter(
                 Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
             )
+        return Ticket.objects.filter(
+            assigned_to=obj['user']
+        ).filter(
+            Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
+        )
 
     def item_pubdate(self, item):
         return item.created
@@ -92,18 +91,17 @@ class UnassignedTickets(Feed):
 
     title = _('Helpdesk: Unassigned Tickets')
     description = _('Unassigned Open and Reopened tickets')
-    link = ''#%s?assigned_to=' % reverse('helpdesk_list')
+    link = ''
 
     def items(self, obj):
         return Ticket.objects.filter(
-                assigned_to__isnull=True
-            ).filter(
-                Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
-            )
+            assigned_to__isnull=True
+        ).filter(
+            Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
+        )
 
     def item_pubdate(self, item):
         return item.created
-
 
     def item_author_name(self, item):
         if item.assigned_to:
@@ -117,7 +115,7 @@ class RecentFollowUps(Feed):
 
     title = _('Helpdesk: Recent Followups')
     description = _('Recent FollowUps, such as e-mail replies, comments, attachments and resolutions')
-    link = '/tickets/' # reverse('helpdesk_list')
+    link = '/tickets/'
 
     def items(self):
         return FollowUp.objects.order_by('-date')[:20]
@@ -133,25 +131,25 @@ class OpenTicketsByQueue(Feed):
     def title(self, obj):
         return _('Helpdesk: Open Tickets in queue %(queue)s') % {
             'queue': obj.title,
-            }
+        }
 
     def description(self, obj):
         return _('Open and Reopened Tickets in queue %(queue)s') % {
             'queue': obj.title,
-            }
+        }
 
     def link(self, obj):
         return '%s?queue=%s' % (
             reverse('helpdesk_list'),
             obj.id,
-            )
+        )
 
     def items(self, obj):
         return Ticket.objects.filter(
-                queue=obj
-            ).filter(
-                Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
-            )
+            queue=obj
+        ).filter(
+            Q(status=Ticket.OPEN_STATUS) | Q(status=Ticket.REOPENED_STATUS)
+        )
 
     def item_pubdate(self, item):
         return item.created

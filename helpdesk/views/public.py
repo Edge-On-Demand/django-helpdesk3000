@@ -6,13 +6,11 @@ django-helpdesk - A Django powered ticket tracker for small enterprise.
 views/public.py - All public facing views, eg non-staff (no authentication
                   required) views.
 """
-
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-#from django.template import RequestContext
 from django.utils.translation import ugettext as _
-from django.conf import settings
 
 from helpdesk import settings as helpdesk_settings
 from helpdesk.forms import PublicTicketForm
@@ -26,7 +24,8 @@ def homepage(request):
             return HttpResponseRedirect(settings.LOGIN_URL+'?next='+request.path)
         return HttpResponseRedirect(reverse('login')+'?next='+request.path)
 
-    if (request.user.is_staff or (request.user.is_authenticated() and helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE)):
+    if (request.user.is_staff or (
+            request.user.is_authenticated() and helpdesk_settings.HELPDESK_ALLOW_NON_STAFF_TICKET_UPDATE)):
         try:
             if getattr(request.user.usersettings.settings, 'login_view_ticketlist', False):
                 return HttpResponseRedirect(reverse('helpdesk_list'))
@@ -36,7 +35,8 @@ def homepage(request):
 
     if request.method == 'POST':
         form = PublicTicketForm(request.POST, request.FILES)
-        form.fields['queue'].choices = [('', '--------')] + [[q.id, q.title] for q in Queue.objects.filter(allow_public_submission=True)]
+        form.fields['queue'].choices = [('', '--------')] + [
+            [q.id, q.title] for q in Queue.objects.filter(allow_public_submission=True)]
         if form.is_valid():
             if text_is_spam(form.cleaned_data['body'], request):
                 # This submission is spam. Let's not save it.
@@ -59,7 +59,8 @@ def homepage(request):
             initial_data['submitter_email'] = request.user.email
 
         form = PublicTicketForm(initial=initial_data)
-        form.fields['queue'].choices = [('', '--------')] + [[q.id, q.title] for q in Queue.objects.filter(allow_public_submission=True)]
+        form.fields['queue'].choices = [('', '--------')] + [
+            [q.id, q.title] for q in Queue.objects.filter(allow_public_submission=True)]
 
     knowledgebase_categories = KBCategory.objects.all()
     
@@ -71,7 +72,7 @@ def homepage(request):
             form=form,
             helpdesk_settings=helpdesk_settings,
             kb_categories=knowledgebase_categories,
-            show_submit_form=show_submit_form,
+            show_submit_form=show_submit_form
         ))
 
 
@@ -99,11 +100,11 @@ def view_ticket(request):
 
             if request.user.is_staff:
                 redirect_url = reverse('helpdesk_view', args=[ticket_id])
-                if request.GET.has_key('close'):
+                if 'close' in request.GET:
                     redirect_url += '?close'
                 return HttpResponseRedirect(redirect_url)
 
-            if request.GET.has_key('close') and ticket.status == Ticket.RESOLVED_STATUS:
+            if 'close' in request.GET and ticket.status == Ticket.RESOLVED_STATUS:
                 from helpdesk.views.staff import update_ticket
                 # Trick the update_ticket() view into thinking it's being called with
                 # a valid POST.
@@ -111,8 +112,8 @@ def view_ticket(request):
                     'new_status': Ticket.CLOSED_STATUS,
                     'public': 1,
                     'title': ticket.title,
-                    'comment': _('Submitter accepted resolution and closed ticket'),
-                    }
+                    'comment': _('Submitter accepted resolution and closed ticket')
+                }
                 if ticket.assigned_to:
                     request.POST['owner'] = ticket.assigned_to.id
                 request.GET = {}
@@ -128,7 +129,7 @@ def view_ticket(request):
                 {
                     'ticket': ticket,
                     'helpdesk_settings': helpdesk_settings,
-                    'next': redirect_url,
+                    'next': redirect_url
                 })
 
     return render(request, 'helpdesk/public_view_form.html',
@@ -136,11 +137,12 @@ def view_ticket(request):
             'ticket': ticket,
             'email': email,
             'error_message': error_message,
-            'helpdesk_settings': helpdesk_settings,
+            'helpdesk_settings': helpdesk_settings
         })
+
 
 def change_language(request):
     return_to = ''
-    if request.GET.has_key('return_to'):
+    if 'return_to' in request.GET:
         return_to = request.GET['return_to']
     return render(request, 'helpdesk/public_change_language.html', {'next': return_to})

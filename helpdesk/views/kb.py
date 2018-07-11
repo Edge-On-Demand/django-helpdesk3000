@@ -7,11 +7,8 @@ views/kb.py - Public-facing knowledgebase views. The knowledgebase is a
               simple categorised question/answer system to show common
               resolutions to common problems.
 """
-
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
-#from django.template import RequestContext
-#from django.utils.translation import ugettext as _
 
 from helpdesk import settings as helpdesk_settings
 from helpdesk.models import KBCategory, KBItem
@@ -23,7 +20,7 @@ def index(request):
     return render(request, 'helpdesk/kb_index.html',
         {
             'kb_categories': category_list,
-            'helpdesk_settings': helpdesk_settings,
+            'helpdesk_settings': helpdesk_settings
         })
 
 
@@ -34,7 +31,7 @@ def category(request, slug):
         {
             'category': category,
             'items': items,
-            'helpdesk_settings': helpdesk_settings,
+            'helpdesk_settings': helpdesk_settings
         })
 
 
@@ -43,7 +40,7 @@ def item(request, item):
     return render(request, 'helpdesk/kb_item.html',
         {
             'item': item,
-            'helpdesk_settings': helpdesk_settings,
+            'helpdesk_settings': helpdesk_settings
         })
 
 

@@ -15,16 +15,22 @@ Assuming 'food' = 'pizza' and 'best_foods' = ['pizza', 'pie', 'cake]:
 {% endif %}
 """
 import re
-import urllib
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from django import template
 from django.utils.safestring import mark_safe
 
 register = template.Library()
 
+
 @register.filter
 def nbsp(s):
     return mark_safe(s.replace(' ', '&nbsp;'))
+
 
 @register.simple_tag
 def sortable_column_link(request, name, sort_param, label=None, default=''):
@@ -46,7 +52,7 @@ def sortable_column_link(request, name, sort_param, label=None, default=''):
         (k, ','.join(map(str, v)) if isinstance(v, list) and len(v) > 1 else (v and v[0]))
         for k, v in params.iterlists())
     kwargs = dict(
-        url=request.path + '?' + urllib.urlencode(params),
+        url=request.path + '?' + urlencode(params),
         name=re.sub('^[^a-zA-Z#]+', '', label or name),
         arrow=arrow
     )

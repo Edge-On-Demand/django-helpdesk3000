@@ -40,8 +40,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'django-helpdesk'
-copyright = u'2011, Ross Poulton + Contributors'
+project = 'django-helpdesk'
+copyright = '2011, Ross Poulton + Contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -178,8 +178,8 @@ htmlhelp_basename = 'django-helpdeskdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'django-helpdesk.tex', u'django-helpdesk Documentation',
-   u'Ross Poulton + Contributors', 'manual'),
+  ('index', 'django-helpdesk.tex', 'django-helpdesk Documentation',
+   'Ross Poulton + Contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -211,6 +211,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'django-helpdesk', u'django-helpdesk Documentation',
-     [u'Ross Poulton + Contributors'], 1)
+    ('index', 'django-helpdesk', 'django-helpdesk Documentation',
+     ['Ross Poulton + Contributors'], 1)
 ]

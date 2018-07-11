@@ -7,13 +7,13 @@ See LICENSE for details.
 create_usersettings.py - Easy way to create helpdesk-specific settings for 
 users who don't yet have them.
 """
-
-from django.utils.translation import ugettext as _
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
 from helpdesk.models import UserSettings
 from helpdesk.settings import DEFAULT_USER_SETTINGS
+
 
 class Command(BaseCommand):
     "create_usersettings command"

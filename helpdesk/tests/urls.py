@@ -5,5 +5,5 @@ admin.autodiscover()
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^', include('helpdesk.urls')),
+    url(r'^', include('helpdesk.urls'))
 ]

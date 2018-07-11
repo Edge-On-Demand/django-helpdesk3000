@@ -8,6 +8,7 @@ scripts/create_escalation_exclusion.py - Easy way to routinely add particular
                                          days to the list of days on which no
                                          escalation should take place.
 """
+from __future__ import print_function
 
 from datetime import timedelta, date
 import getopt
@@ -15,7 +16,6 @@ from optparse import make_option
 import sys
 
 from django.core.management.base import BaseCommand, CommandError
-#from django.db.models import Q
 
 from helpdesk.models import EscalationExclusion, Queue
 
@@ -77,7 +77,7 @@ day_names = {
     'thursday': 3,
     'friday': 4,
     'saturday': 5,
-    'sunday': 6,
+    'sunday': 6
 }
 
 
@@ -95,23 +95,23 @@ def create_exclusions(days, occurrences, verbose, queues):
                     esc.save()
 
                     if verbose:
-                        print "Created exclusion for %s %s" % (day_name, workdate)
+                        print("Created exclusion for %s %s" % (day_name, workdate))
 
                     for q in queues:
                         esc.queues.add(q)
                         if verbose:
-                            print "  - for queue %s" % q
+                            print("  - for queue %s" % q)
 
                 i += 1
             workdate += timedelta(days=1)
 
 
 def usage():
-    print "Options:"
-    print " --days, -d: Days of week (monday, tuesday, etc)"
-    print " --occurrences, -o: Occurrences: How many weeks ahead to exclude this day"
-    print " --queues, -q: Queues to include (default: all). Use queue slugs"
-    print " --verbose, -v: Display a list of dates excluded"
+    print("Options:")
+    print(" --days, -d: Days of week (monday, tuesday, etc)")
+    print(" --occurrences, -o: Occurrences: How many weeks ahead to exclude this day")
+    print(" --queues, -q: Queues to include (default: all). Use queue slugs")
+    print(" --verbose, -v: Display a list of dates excluded")
 
 
 if __name__ == '__main__':
@@ -149,7 +149,7 @@ if __name__ == '__main__':
             try:
                 q = Queue.objects.get(slug__exact=queue)
             except Queue.DoesNotExist:
-                print "Queue %s does not exist." % queue
+                print("Queue %s does not exist." % queue)
                 sys.exit(2)
             queues.append(q)
 

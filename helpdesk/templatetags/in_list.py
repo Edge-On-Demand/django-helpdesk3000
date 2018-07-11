@@ -14,11 +14,12 @@ Assuming 'food' = 'pizza' and 'best_foods' = ['pizza', 'pie', 'cake]:
  Your food isn't one of our favourites.
 {% endif %}
 """
-
 from django import template
+
 
 def in_list(value, arg):
     return value in (arg or [])
+
 
 register = template.Library()
 register.filter(in_list)
