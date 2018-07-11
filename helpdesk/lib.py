@@ -28,7 +28,6 @@ from django.template import Context, engines
 from django.utils.encoding import smart_str
 from django.utils.safestring import mark_safe
 
-from helpdesk.models import EmailTemplate
 
 logger = logging.getLogger('helpdesk')
 
@@ -64,6 +63,8 @@ def send_templated_mail(
         eg ('/tmp/file1.txt', '/tmp/image.png')
 
     """
+    from helpdesk.models import EmailTemplate  # to avoid circular import
+
     context = Context(email_context)
 
     if hasattr(context['queue'], 'locale'):
